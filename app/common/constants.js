@@ -58,7 +58,7 @@ export const stringConstants = {
   SERVICE_STATUS_HTML:
     '<body style="font-family: Helvetica !important; background-color: black">' +
     '<div style="display: flex; flex:1; height: 100% ; justify-content: center; align-items: center; min-height: 100vh !important; font-size: 24px !important; color: #605DFF !important;">' +
-    '⚡ Template 🔋 MicroService is working fine</div></body>'
+    '⚡ Transaction 🔋 MicroService is working fine</div></body>'
 }
 
 export const genericConstants = {
