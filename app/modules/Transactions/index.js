@@ -9,15 +9,21 @@ export default class Index {
     if (!getMetersRes) { return Utils.handleError(error, request, response) }
     return Utils.response(response, getMetersRes, apiSuccessMessage.FETCH_SUCCESS, httpConstants.RESPONSE_STATUS.SUCCESS, httpConstants.RESPONSE_CODES.OK)
   }
-  async getLatestTransactions () {
-    Utils.lhtLog('Inside getLatestTransactions', request.params, 'getLatestTransactions', 0, '')
+  async getLatestTransactions (request , response) {
+    Utils.lhtLog('Inside getLatestTransactions', request.query, 'getLatestTransactions', 0, '')
     const [error, getMetersRes] = await Utils.parseResponse(new BLManager().getLatestTransactions( request.query))
     if (!getMetersRes) { return Utils.handleError(error, request, response) }
     return Utils.response(response, getMetersRes, apiSuccessMessage.FETCH_SUCCESS, httpConstants.RESPONSE_STATUS.SUCCESS, httpConstants.RESPONSE_CODES.OK)
   }
-  async getTotalTransactions () {
+  async getTotalTransactions (request , response) {
     Utils.lhtLog('Inside getTotalTransactions', request.params, 'getTotalTransactions', 0, '')
     const [error, getMetersRes] = await Utils.parseResponse(new BLManager().getTotalTransactions())
+    if (!getMetersRes) { return Utils.handleError(error, request, response) }
+    return Utils.response(response, getMetersRes, apiSuccessMessage.FETCH_SUCCESS, httpConstants.RESPONSE_STATUS.SUCCESS, httpConstants.RESPONSE_CODES.OK)
+  }
+  async getTransactionsCountForAddress (request , response) {
+    Utils.lhtLog('Inside getTransactionsCountForAddress', request.params, 'getTransactionsCountForAddress', 0, '')
+    const [error, getMetersRes] = await Utils.parseResponse(new BLManager().getTransactionsCountForAddress(request.params, request.query))
     if (!getMetersRes) { return Utils.handleError(error, request, response) }
     return Utils.response(response, getMetersRes, apiSuccessMessage.FETCH_SUCCESS, httpConstants.RESPONSE_STATUS.SUCCESS, httpConstants.RESPONSE_CODES.OK)
   }

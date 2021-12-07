@@ -11,9 +11,12 @@ module.exports = (app) => {
     /**
      * route definition
      */
-    app.get("/get-transactions-for-address/:address",  new Transactions().getTransactionsForAddress);
-    app.get("/get-latest-transactions",  new Transactions().getLatestTransactions);
-    app.get("/get-total-transactions",  new Transactions().getTotalTransactions);
+    app.get("/getLatestTransactions",  new Transactions().getLatestTransactions);
+    app.get("/getTotalTransactions",  new Transactions().getTotalTransactions);
+
+    app.get("/getTransactionsForAddress/:address",  new Transactions().getTransactionsForAddress);
+    app.get("/getTransactionsCountForAddress/:address",  new Transactions().getTransactionsCountForAddress);
+
 
 
 };
