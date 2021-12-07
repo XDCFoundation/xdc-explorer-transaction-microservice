@@ -3,6 +3,8 @@
  */
 import * as ValidationManger from "../middleware/validation";
 import Transactions from "../app/modules/Transactions";
+import TransferTransactions from "../app/modules/TransferTransactions";
+
 import {stringConstants} from "../app/common/constants";
 
 module.exports = (app) => {
@@ -16,7 +18,9 @@ module.exports = (app) => {
 
     app.get("/getTransactionsForAddress/:address",  new Transactions().getTransactionsForAddress);
     app.get("/getTransactionsCountForAddress/:address",  new Transactions().getTransactionsCountForAddress);
-
-
+    app.get("/getSomeDaysTransactions/:days",  new Transactions().getSomeDaysTransactions);
+    app.get("/getTransactionDetails/:hash",  new Transactions().getTransactionDetailsUsingHash);
+    app.get("/getTransactionDetails/:hash",  new Transactions().getTransactionDetailsUsingHash);
+    app.get("/getListOfTransferTransactionsForToken/:address",  new TransferTransactions().getListOfTransferTransactionsForToken);
 
 };

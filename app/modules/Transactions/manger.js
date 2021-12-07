@@ -1,5 +1,7 @@
 import Utils from '../../utils'
-import TransactionModel from "../../models/transaction"
+import TransactionModel from "../../models/transaction";
+import TransactionHistoryModel from "../../models/historical";
+
 export default class Manger {
     getTransactionsForAddress = async (pathParameter, queryStringParameter) => {
 
@@ -91,6 +93,19 @@ export default class Manger {
            return await TransactionModel.countData({ $or: [{ from: { $eq: address } }, { to: { $eq: address } }] })
         }
     }
+    getSomeDaysTransactions = async(params) =>{    
+    let selectionKey = { day: 1, transactionCount: 1, avgGasPrice: 1 }
+    Utils.lhtLog("BLManager:getTotalTransactions", "get getSomeDaysTransactions  count", "", "");
+    let response = await TransactionHistoryModel.getHistoricalDataList({}, selectionKey, 0, parseInt(params.days), { _id: -1 });
+    return response
+    }
 
+    getTransactionDetailsUsingHash = async(params)=>{
+        return await TransactionModel.getTransaction({hash : params.hash});
+
+    }
+
+  
+    
 
 }

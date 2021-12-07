@@ -46,7 +46,6 @@ TransactionSchema.static({
         return this.updateMany(findObj, updateObj);
     },
     getTransactionList: function (findObj, selectionKey = "", skip = 0, limit = 0,sort=1) {
-      console.log("test");
         return this.find(findObj, selectionKey).skip(skip).limit(limit).sort(sort);
     },
     bulkUpsert: function (bulkOps) {

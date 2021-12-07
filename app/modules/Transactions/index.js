@@ -27,4 +27,18 @@ export default class Index {
     if (!getMetersRes) { return Utils.handleError(error, request, response) }
     return Utils.response(response, getMetersRes, apiSuccessMessage.FETCH_SUCCESS, httpConstants.RESPONSE_STATUS.SUCCESS, httpConstants.RESPONSE_CODES.OK)
   }
+  async getSomeDaysTransactions (request , response) {
+    Utils.lhtLog('Inside getSomeDaysTransactions', request.params, 'getSomeDaysTransactions', 0, '')
+    const [error, getMetersRes] = await Utils.parseResponse(new BLManager().getSomeDaysTransactions(request.params))
+    if (!getMetersRes) { return Utils.handleError(error, request, response) }
+    return Utils.response(response, getMetersRes, apiSuccessMessage.FETCH_SUCCESS, httpConstants.RESPONSE_STATUS.SUCCESS, httpConstants.RESPONSE_CODES.OK)
+
+  }
+  async getTransactionDetailsUsingHash (request , response) {
+    Utils.lhtLog('Inside getTransactionDetails', request.params, 'getTransactionDetails', 0, '')
+    const [error, getMetersRes] = await Utils.parseResponse(new BLManager().getTransactionDetailsUsingHash(request.params))
+    if (!getMetersRes) { return Utils.handleError(error, request, response) }
+    return Utils.response(response, getMetersRes, apiSuccessMessage.FETCH_SUCCESS, httpConstants.RESPONSE_STATUS.SUCCESS, httpConstants.RESPONSE_CODES.OK)
+  }
+
 }
