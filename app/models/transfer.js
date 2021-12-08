@@ -47,4 +47,4 @@ TokenTransferSchema.static({
         return this.count(query);
     }
 });
-module.exports = mongoose.model("xin-transferToken", TokenTransferSchema);
+module.exports = mongoose.model("xin-transfertoken", TokenTransferSchema);
