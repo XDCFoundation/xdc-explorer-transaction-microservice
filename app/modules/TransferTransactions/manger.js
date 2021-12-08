@@ -16,14 +16,13 @@ export default class Manger {
         if (queryStringParameters && queryStringParameters.limit) {
             limit = queryStringParameters.limit
         }
-        return await TransferModel.getTokenList({contract: pathParameters.address}, {}, parseInt(skip), parseInt(limit), { timestamp: -1 });
+        return await TransferModel.getTokenList({contract: pathParameters.contractAddress}, {}, parseInt(skip), parseInt(limit), { timestamp: -1 });
        
     }
 
     getTotalTransferTransactionForToken= async(pathParameters)=>{
         Utils.lhtLog("BLManager:getTotalTransferTransactionForToken", "get total of TokenTransfer count", "", "");
-        return await TransferModel.countData({contract: pathParameters.address});
-       
+        return await TransferModel.countData({contract:pathParameters.contractAddress});
     }
 
     

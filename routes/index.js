@@ -19,7 +19,7 @@ module.exports = (app) => {
     app.get("/getTransactionsCountForAddress/:address",  new Transactions().getTransactionsCountForAddress);
     app.get("/getSomeDaysTransactions/:days",  new Transactions().getSomeDaysTransactions);
     app.get("/getTransactionDetails/:hash",  new Transactions().getTransactionDetailsUsingHash);
-    app.get("/getListOfTransferTransactionsForToken/:address",ValidationManger.validateQuery,  new TransferTransactions().getListOfTransferTransactionsForToken);
-    app.get("/getTotalTransferTransactionForToken/:address",  new TransferTransactions().getTotalTransferTransactionForToken);
+    app.get("/getListOfTransferTransactionsForToken/:contractAddress",ValidationManger.validateQuery,  new TransferTransactions().getListOfTransferTransactionsForToken);
+    app.get("/getTotalTransferTransactionForToken/:contractAddress",  new TransferTransactions().getTotalTransferTransactionForToken);
 
 };
