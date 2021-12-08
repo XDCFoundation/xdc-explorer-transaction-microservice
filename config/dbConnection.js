@@ -14,7 +14,7 @@ export default class DBConnection {
       useCreateIndex: true,
       useUnifiedTopology: true,
       retryWrites: false,
-      sslCA: [fs.readFileSync(__dirname  +"/xinfin-rds-combined-ca-bundle.pem")]
+      sslCA: [fs.readFileSync(__dirname  + Config.RDS_FILE)]
     }
     return mongoose.connect(Config.DB, options)
   }
