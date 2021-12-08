@@ -16,92 +16,99 @@ export default class Manger {
         if (queryStringParameter && queryStringParameter.limit)
             limit = parseInt(queryStringParameter.limit)
         let responseTransaction = []
-     
+
         Utils.lhtLog("BLManager:getAccountDetailsUsingAddress", "get total transaction count", "", "");
         if (queryStringParameter && queryStringParameter.keyword != null && queryStringParameter.keyword != '') {
             let keyword = queryStringParameter.keyword
             let toTransaction = await TransactionModel.getTransactionList(
                 {
                     $and: [{
-                            to: address 
+                        to: address
                     }, { hash: { $regex: ".*" + keyword + ".*", $options: 'i' } }]
                 }, "", skip, limit, {});
             let fromTransaction = await TransactionModel.getTransactionList(
-                    {
-                        $and: [{
-                                from: address 
-                        }, { hash: { $regex: ".*" + keyword + ".*", $options: 'i' } }]
-                    }, "", skip, limit, {}); 
-                    responseTransaction = [...fromTransaction , ...toTransaction]           
+                {
+                    $and: [{
+                        from: address
+                    }, { hash: { $regex: ".*" + keyword + ".*", $options: 'i' } }]
+                }, "", skip, limit, {});
+            responseTransaction = [...fromTransaction, ...toTransaction]
         }
         else {
             Utils.lhtLog("BLManager:getAccountDetailsUsingAddress", "get total transaction without keyword", "", "");
-           let  fromTransaction = await TransactionModel.getTransactionList(
-                {   from : address  } , "" , skip , limit , {}
+            let fromTransaction = await TransactionModel.getTransactionList(
+                { from: address }, "", skip, limit, {}
             )
-             let toTransaction =   await TransactionModel.getTransactionList(
-                {   to:  address  } , "" , skip , limit , {}
+            let toTransaction = await TransactionModel.getTransactionList(
+                { to: address }, "", skip, limit, {}
             )
-            responseTransaction = [...fromTransaction , ...toTransaction]
-           
+            responseTransaction = [...fromTransaction, ...toTransaction]
+
         }
         return responseTransaction;
 
     }
 
-    getLatestTransactions = async(req) => {
+    getLatestTransactions = async (req) => {
         Utils.lhtLog("BLManager:getLatestTransactions", "get getLatestTransactions count " + req, "", "");
         let skip = parseInt(req.skip ? req.skip : 0);
         let limit = parseInt(req.limit ? req.limit : 10);
-
-        let response = await TransactionModel.getTransactionList({}, {}, skip, limit, { blockNumber: -1 });
-        let responseArr = [];
-        for (let index = 0; index < limit; index++) {
-            let gasPrice = Number(response[index].gasPrice)
-            let gasUsed = response[index].gasUsed
-
-            let transactionFee = gasPrice * gasUsed
-
-            let newResponse = { ...response[index].toJSON(), transactionFee: transactionFee }
-
-
-            responseArr.push(newResponse)
-        }
-        return responseArr
+        return await TransactionModel.getTransactionList({}, {}, skip, limit, { blockNumber: -1 });
+       
     }
-    getTotalTransactions = async() => {
-        Utils.lhtLog("BLManager:getTotalTransactions", "get getTotalTransactions count " , "", "");
+    getTotalTransactions = async () => {
+        Utils.lhtLog("BLManager:getTotalTransactions", "get getTotalTransactions count ", "", "");
         return await TransactionModel.countData({});
     }
 
-    getTransactionsCountForAddress =async(pathParameter, queryStringParameter) =>{
+    getTransactionsCountForAddress = async (pathParameter, queryStringParameter) => {
         Utils.lhtLog("BLManager:getTransactionsCountForAddress", "getTransactionsCountForAddress started", "", "");
         let address = pathParameter && pathParameter.address;
         Utils.lhtLog("BLManager:getAccountDetailsUsingAddress", "get total transaction count for address", "", "");
+        let toCount = 0, fromCount = 0, totalCount = 0
         if (queryStringParameter && queryStringParameter.keyword != null && queryStringParameter.keyword != '') {
-            let keyword = queryStringParameter.keyword    
-          return await TransactionModel.countData({
+            let keyword = queryStringParameter.keyword
+            toCount =Promise.resolve( TransactionModel.countData({
                 $and: [{
-                    $or: [{ to: address },
-                    { from: address }]
+                    to: address
+                    // $or: [{ to: address },
+                    // { from: address }]
                 }, { hash: { $regex: ".*" + keyword + ".*", $options: 'i' } }
                 ]
-            })
+            }))
+            fromCount = Promise.resolve(TransactionModel.countData({
+                $and: [{
+                    from: address
+                    // $or: [{ to: address },
+                    // { from: address }]
+                }, { hash: { $regex: ".*" + keyword + ".*", $options: 'i' } }
+                ]
+            }))
         }
         else {
             Utils.lhtLog("BLManager:getTransactionsCountForAddress", "get total transaction count for address without keyword", "", "");
-           return await TransactionModel.countData({ $or: [{ from: { $eq: address } }, { to: { $eq: address } }] })
+            fromCount = Promise.resolve(TransactionModel.countData({ from: address }))
+            toCount = Promise.resolve(TransactionModel.countData({ to: address }))
         }
-    }
-    getSomeDaysTransactions = async(params) =>{    
-    let selectionKey = { day: 1, transactionCount: 1, avgGasPrice: 1 }
-    Utils.lhtLog("BLManager:getTotalTransactions", "get getSomeDaysTransactions  count", "", "");
-    let response = await TransactionHistoryModel.getHistoricalDataList({}, selectionKey, 0, parseInt(params.days), { _id: -1 });
-    return response
+        await fromCount.then((data) => {
+            totalCount += data
+        })
+        await toCount.then((data) => {
+            totalCount += data
+        })
+        return totalCount;
+
     }
 
-    getTransactionDetailsUsingHash = async(params)=>{
-        return await TransactionModel.getTransaction({hash : params.hash});
+    getSomeDaysTransactions = async (params) => {
+        let selectionKey = { day: 1, transactionCount: 1, avgGasPrice: 1 }
+        Utils.lhtLog("BLManager:getTotalTransactions", "get getSomeDaysTransactions  count", "", "");
+        let response = await TransactionHistoryModel.getHistoricalDataList({}, selectionKey, 0, parseInt(params.days), { _id: -1 });
+        return response
+    }
+
+    getTransactionDetailsUsingHash = async (params) => {
+        return await TransactionModel.getTransaction({ hash: params.hash });
 
     }
 
