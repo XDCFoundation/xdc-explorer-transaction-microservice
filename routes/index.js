@@ -13,15 +13,13 @@ module.exports = (app) => {
     /**
      * route definition
      */
-    app.get("/getLatestTransactions",  new Transactions().getLatestTransactions);
+    app.get("/getLatestTransactions", ValidationManger.validateQuery, new Transactions().getLatestTransactions);
     app.get("/getTotalTransactions",  new Transactions().getTotalTransactions);
-
-    app.get("/getTransactionsForAddress/:address",  new Transactions().getTransactionsForAddress);
+    app.get("/getTransactionsForAddress/:address",ValidationManger.validateQuery, new Transactions().getTransactionsForAddress);
     app.get("/getTransactionsCountForAddress/:address",  new Transactions().getTransactionsCountForAddress);
     app.get("/getSomeDaysTransactions/:days",  new Transactions().getSomeDaysTransactions);
     app.get("/getTransactionDetails/:hash",  new Transactions().getTransactionDetailsUsingHash);
-    app.get("/getTransactionDetails/:hash",  new Transactions().getTransactionDetailsUsingHash);
-    app.get("/getListOfTransferTransactionsForToken/:address",  new TransferTransactions().getListOfTransferTransactionsForToken);
-    app.get("/getTotalTransferTransactionForToken",  new TransferTransactions().getTotalTransferTransactionForToken);
+    app.get("/getListOfTransferTransactionsForToken/:address",ValidationManger.validateQuery,  new TransferTransactions().getListOfTransferTransactionsForToken);
+    app.get("/getTotalTransferTransactionForToken/:address",  new TransferTransactions().getTotalTransferTransactionForToken);
 
 };

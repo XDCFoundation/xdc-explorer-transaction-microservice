@@ -2,14 +2,16 @@ import Utils from '../app/utils'
 import * as yup from 'yup'
 
 module.exports = {
-  validateUserLogin: async (req, res, next) => {
+  validateQuery: async (req, res, next) => {
     const schema = yup.object().shape({
-      email: yup.string().email(),
-      password: yup.string().min(8).required()
+      skip: yup.number().required(),
+      limit: yup.number().required()
     })
-    await validate(schema, req.body, res, next)
+    await validate(schema, req.query, res, next)
   }
+
 }
+
 
 const validate = async (schema, reqData, res, next) => {
   try {
