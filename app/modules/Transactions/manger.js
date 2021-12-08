@@ -105,7 +105,4 @@ export default class Manger {
 
     }
 
-  
-    
-
 }

@@ -20,6 +20,12 @@ export default class Manger {
        
     }
 
+    getTotalTransferTransactionForToken= async(pathParameters)=>{
+        Utils.lhtLog("BLManager:getTotalTransferTransactionForToken", "get total of TokenTransfer count", "", "");
+        return await TransferModel.countData({contract: pathParameters.address});
+       
+    }
+
     
 
 }

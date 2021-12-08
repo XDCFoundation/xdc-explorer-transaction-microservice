@@ -22,5 +22,6 @@ module.exports = (app) => {
     app.get("/getTransactionDetails/:hash",  new Transactions().getTransactionDetailsUsingHash);
     app.get("/getTransactionDetails/:hash",  new Transactions().getTransactionDetailsUsingHash);
     app.get("/getListOfTransferTransactionsForToken/:address",  new TransferTransactions().getListOfTransferTransactionsForToken);
+    app.get("/getTotalTransferTransactionForToken",  new TransferTransactions().getTotalTransferTransactionForToken);
 
 };
