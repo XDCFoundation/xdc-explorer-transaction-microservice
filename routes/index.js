@@ -40,6 +40,6 @@ module.exports = (app) => {
     /**
      * Search Data definition
      */
-     app.get("/searchBlockchainData", new Search().searchBlockchainData);
+     app.post("/searchBlockchainData", new Search().searchBlockchainData);
 };
 
