@@ -53,4 +53,4 @@ CoinMasterSchema.static({
         return this.bulkWrite(bulkOps);
     },
 });
-module.exports = mongoose.model("xin-coin-market-exchange", CoinMasterSchema);
+module.exports = mongoose.model(" xin-coin-market-exchange", CoinMasterSchema);

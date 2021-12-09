@@ -17,7 +17,7 @@ export default class Manger {
     getCoinMarketTotalSupply= async()=>{
         Utils.lhtLog("BLManager:getCoinMarketTotalSupply", "get  getCoinMarketTotalSupply ", "", "");
         let coinMarketResponse = await CoinMasterModel.getCoinMarketCapList({}, 
-            {}, 0, 1, { lastUpdated: -1 });           
+            "", 0, 1, { lastUpdated: -1 });           
         let totalSupply = coinMarketResponse[0].totalSupply
         return totalSupply;  
       }
