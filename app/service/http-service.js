@@ -4,10 +4,10 @@ class HTTPService {
   /**
    * execute Http request
    */
-  static async executeHTTPRequest (method, hostname, path, data, headers) {
+  static async executeHTTPRequest (method, url, data, headers) {
     return await new Promise(function (fulfill, reject) {
       request({
-        url: hostname + path,
+        url: url,
         method: method,
         headers: headers,
         json: data

@@ -4,6 +4,7 @@
 import * as ValidationManger from "../middleware/validation";
 import Transactions from "../app/modules/Transactions";
 import TransferTransactions from "../app/modules/TransferTransactions";
+import CoinMarketExchange from "../app/modules/CoinMarketExchange";
 
 import {stringConstants} from "../app/common/constants";
 
@@ -11,7 +12,7 @@ module.exports = (app) => {
     app.get('/', (req, res) => res.send(stringConstants.SERVICE_STATUS_HTML));
 
     /**
-     * route definition
+     * Transaction definition
      */
     app.get("/getLatestTransactions", ValidationManger.validateQuery, new Transactions().getLatestTransactions);
     app.get("/getTotalTransactions",  new Transactions().getTotalTransactions);
@@ -19,7 +20,20 @@ module.exports = (app) => {
     app.get("/getTransactionsCountForAddress/:address",  new Transactions().getTransactionsCountForAddress);
     app.get("/getSomeDaysTransactions/:days",  new Transactions().getSomeDaysTransactions);
     app.get("/getTransactionDetails/:hash",  new Transactions().getTransactionDetailsUsingHash);
+
+
+     /**
+     * Transfer Transaction definition
+     */
     app.get("/getListOfTransferTransactionsForToken/:contractAddress",ValidationManger.validateQuery,  new TransferTransactions().getListOfTransferTransactionsForToken);
     app.get("/getTotalTransferTransactionForToken/:contractAddress",  new TransferTransactions().getTotalTransferTransactionForToken);
 
+     /**
+     * Coin Market Exchange definition
+     */
+      app.get("/getCoinMarketCap/:fiatValue", new CoinMarketExchange().getCoinMarketCap);
+      app.get("/getCoinMarketTotalSupply",  new CoinMarketExchange().getCoinMarketTotalSupply);
+      app.get("/getCoinMarketExchangeForToken/:symbol",  new CoinMarketExchange().getCoinMarketExchangeForToken);
+
 };
+
