@@ -62,7 +62,11 @@ export const stringConstants = {
 }
 
 export const genericConstants = {
-  DEVICE_TYPE: {}
+  DEVICE_TYPE: {},
+  REQUEST_TYPE:{
+    TRANSACTION:"Transaction",
+    ADDRESS:"Adrress"
+  }
 }
 
 export const apiSuccessMessage = {

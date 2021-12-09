@@ -5,6 +5,8 @@ import * as ValidationManger from "../middleware/validation";
 import Transactions from "../app/modules/Transactions";
 import TransferTransactions from "../app/modules/TransferTransactions";
 import CoinMarketExchange from "../app/modules/CoinMarketExchange";
+import Search from "../app/modules/SearchData";
+
 
 import {stringConstants} from "../app/common/constants";
 
@@ -35,5 +37,9 @@ module.exports = (app) => {
       app.get("/getCoinMarketTotalSupply",  new CoinMarketExchange().getCoinMarketTotalSupply);
       app.get("/getCoinMarketExchangeForToken/:symbol",  new CoinMarketExchange().getCoinMarketExchangeForToken);
 
+    /**
+     * Search Data definition
+     */
+     app.get("/searchBlockchainData", new Search().searchBlockchainData);
 };
 
