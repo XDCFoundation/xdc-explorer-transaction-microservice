@@ -1,6 +1,7 @@
 import Utils from '../../utils'
 import TransactionModel from "../../models/transaction";
 import TransactionHistoryModel from "../../models/historical";
+import { apiFailureMessage } from '../../common/constants';
 
 export default class Manger {
     getTransactionsForAddress = async (pathParameter, queryStringParameter) => {
@@ -108,7 +109,10 @@ export default class Manger {
     }
 
     getTransactionDetailsUsingHash = async (params) => {
-        return await TransactionModel.getTransaction({ hash: params.hash });
+        const transaction = await TransactionModel.getTransaction({ hash: params.hash });
+        if(!transaction)
+            throw {message: apiFailureMessage.NO_TRANSACTION}
+
 
     }
 

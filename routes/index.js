@@ -6,7 +6,7 @@ import Transactions from "../app/modules/Transactions";
 import TransferTransactions from "../app/modules/TransferTransactions";
 import CoinMarketExchange from "../app/modules/CoinMarketExchange";
 import Search from "../app/modules/SearchData";
-
+import TPS from "../app/modules/TPS";
 
 import {stringConstants} from "../app/common/constants";
 
@@ -29,6 +29,8 @@ module.exports = (app) => {
      */
     app.get("/getListOfTransferTransactionsForToken/:contractAddress",ValidationManger.validateQuery,  new TransferTransactions().getListOfTransferTransactionsForToken);
     app.get("/getTotalTransferTransactionForToken/:contractAddress",  new TransferTransactions().getTotalTransferTransactionForToken);
+    app.get("/getTransferTransactionDetailsUsingHash/:hash",  new TransferTransactions().getTransferTransactionDetailsUsingHash);
+
 
      /**
      * Coin Market Exchange definition
@@ -36,10 +38,17 @@ module.exports = (app) => {
       app.get("/getCoinMarketCap/:fiatValue", new CoinMarketExchange().getCoinMarketCap);
       app.get("/getCoinMarketTotalSupply",  new CoinMarketExchange().getCoinMarketTotalSupply);
       app.get("/getCoinMarketExchangeForToken/:symbol",  new CoinMarketExchange().getCoinMarketExchangeForToken);
+      
 
     /**
      * Search Data definition
      */
      app.post("/searchBlockchainData", new Search().searchBlockchainData);
+
+       /**
+     * TPS definition
+     */
+        app.post("/getCurrentTPS", new TPS().getCurrentTPS);
+        app.post("/getMaxTPS", new TPS().getMaxTPS);
 };
 
