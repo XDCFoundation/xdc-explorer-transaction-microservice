@@ -104,15 +104,14 @@ export default class Manger {
     getSomeDaysTransactions = async (params) => {
         let selectionKey = { day: 1, transactionCount: 1, avgGasPrice: 1 }
         Utils.lhtLog("BLManager:getTotalTransactions", "get getSomeDaysTransactions  count", "", "");
-        let response = await TransactionHistoryModel.getHistoricalDataList({}, selectionKey, 0, parseInt(params.days), { _id: -1 });
-        return response
+        return  await TransactionHistoryModel.getHistoricalDataList({}, selectionKey, 0, parseInt(params.days), { _id: -1 });
     }
 
     getTransactionDetailsUsingHash = async (params) => {
         const transaction = await TransactionModel.getTransaction({ hash: params.hash });
         if(!transaction)
             throw {message: apiFailureMessage.NO_TRANSACTION}
-
+        return transaction;
 
     }
 
