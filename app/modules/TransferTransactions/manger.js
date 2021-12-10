@@ -27,7 +27,7 @@ export default class Manger {
 
     getTransferTransactionDetailsUsingHash= async(pathParameters)=>{
         Utils.lhtLog("BLManager:getTotalTransferTransactionForToken", "get total of TokenTransfer count", "", "");
-        return await TransferTransaction.getToken( {hash:pathParameters.transactionHash})
+        return await TransferModel.getToken( {hash:pathParameters.transactionHash})
     }
     
 

@@ -48,7 +48,7 @@ module.exports = (app) => {
        /**
      * TPS definition
      */
-        app.post("/getCurrentTPS", new TPS().getCurrentTPS);
-        app.post("/getMaxTPS", new TPS().getMaxTPS);
+        app.get("/getCurrentTPS", new TPS().getCurrentTPS);
+        app.get("/getMaxTPS", new TPS().getMaxTPS);
 };
 
