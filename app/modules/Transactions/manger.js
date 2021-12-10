@@ -46,11 +46,10 @@ export default class Manger {
             // let fromTransaction = await TransactionModel.getTransactionList(
             //     { from: address }, "", skip, limit, {}
             // )
-                let fromTransaction={};
-            let toTransaction = await TransactionModel.getTransactionList(
+            return await TransactionModel.getTransactionList(
                 { to: address }, "", skip, limit, {}
             )
-            responseTransaction = [...fromTransaction, ...toTransaction]
+
 
         }
         return responseTransaction;
