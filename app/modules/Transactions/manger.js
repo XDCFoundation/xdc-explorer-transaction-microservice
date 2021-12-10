@@ -37,9 +37,16 @@ export default class Manger {
         }
         else {
             Utils.lhtLog("BLManager:getAccountDetailsUsingAddress", "get total transaction without keyword", "", "");
-            let fromTransaction = await TransactionModel.getTransactionList(
-                { from: address }, "", skip, limit, {}
-            )
+            /**
+             *TODO :- TO be reopned after indexing on transaction collection
+             * @type {*}
+             */
+
+
+            // let fromTransaction = await TransactionModel.getTransactionList(
+            //     { from: address }, "", skip, limit, {}
+            // )
+                let fromTransaction={};
             let toTransaction = await TransactionModel.getTransactionList(
                 { to: address }, "", skip, limit, {}
             )
