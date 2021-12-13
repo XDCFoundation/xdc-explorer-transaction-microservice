@@ -3,6 +3,7 @@ import * as yup from 'yup'
 
 module.exports = {
   validateQuery: async (req, res, next) => {
+  console.log("validateQuery req",JSON.stringify(req));
     const schema = yup.object().shape({
       skip: yup.number().required(),
       limit: yup.number().required()
