@@ -24,8 +24,11 @@ const CoinMasterSchema = new Schema({
     fullyDilutedMarketCap: {type: Number, default: 0},
     volume: {type: Number, default: 0},
     volumeMarketCap: {type: Number, default: 0},
-    isActive: {type: Number, default: 0},
     quote: {type: Array, default: {}},
+    modifiedOn: {type: Number, default: Date.now()},
+    createdOn: {type: Number, default: Date.now()},
+    isDeleted: {type: Boolean, default: false},
+    isActive: {type: Boolean, default: true},
 });
 
 CoinMasterSchema.method({

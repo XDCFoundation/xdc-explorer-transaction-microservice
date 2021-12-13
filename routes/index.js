@@ -38,7 +38,7 @@ module.exports = (app) => {
       app.get("/getCoinMarketCap/:fiatValue", new CoinMarketExchange().getCoinMarketCap);
       app.get("/getCoinMarketTotalSupply",  new CoinMarketExchange().getCoinMarketTotalSupply);
       app.get("/getCoinMarketExchangeForToken/:symbol",  new CoinMarketExchange().getCoinMarketExchangeForToken);
-      
+      app.get("/getCoinMarketDetailForTransaction", new CoinMarketExchange().getCoinMarketDetailForTransaction);
 
     /**
      * Search Data definition
