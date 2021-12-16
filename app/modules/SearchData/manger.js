@@ -67,7 +67,7 @@ export default class Manger {
             return responseStatus;
         }
         if (type === genericConstants.REQUEST_TYPE.ADDRESS) {
-            responseStatus = await this.searchAddress(data)
+           responseStatus = await this.searchAddress(data)
             return responseStatus;
         }
         if (!type) {
@@ -113,23 +113,27 @@ export default class Manger {
         return responseStatus;
     }
 
-    searchAddress = async (data) => {
+  async searchAddress (data) {
         try{
+        // web3 = await WebSocketService.webSocketConnection("wss://LeewayHertzXDCWS.BlocksScan.io");   
         let responseStatus = []
-        const call = await web3.eth.call({ to: data, data: web3.utils.sha3("totalSupply()") });
-        if (call === "0x") {
+        const code =await web3.eth.getCode(data)
+        // return new Promise(async function(resolve, reject) {
+           
+        if (code === "0x") {
+          
             const findObjAddresses = { "address": data };
-            let account = await AccountModel.findOne(findObjAddresses);
+            let account = await AccountModel.getAccount(findObjAddresses);
+            console.log(account, "account");
             if (account) {
                 responseStatus.push({ 'redirect': 'account', account })
-                return responseStatus;
+               return responseStatus;
             }
             account = await this.getAddressDataFromSocket(data)
             if(account)
             responseStatus.push({ 'redirect': 'account', account })
             return responseStatus;
         }
-        else {
             const findObj = {
                 "address": data,
                 "ERC": { $gte: 2 }
@@ -143,17 +147,21 @@ export default class Manger {
             if(token)
             responseStatus.push({ 'redirect': 'token', token })
             return responseStatus;
-        }
+        
+        
+    // });
     }catch(error)
     {
         if(error && error.message === 'connection not open on send()'){
             web3 = await WebSocketService.webSocketConnection(Config.WS_URL);
-            this.searchAddress(data)
+            return await this.searchAddress(data)
             }
             else throw error
     }
 
     }
+
+ 
 
     searchTokens = async (data, type) => {
         let responseStatus = []
@@ -229,7 +237,21 @@ export default class Manger {
                 contractAddress: transaction.contractAddress,
                 cumulativeGasUsed: transaction.cumulativeGasUsed,
                 logs: transaction.logs,
-                status: transaction.status
+                status: transaction.status,
+                gas:  0,
+                gasPrice: 0,
+                input:  "",
+                nonce: 0,
+                transactionIndex: 0,
+                value: "",
+                r:  "",
+                s: "",
+                v: "",
+                timestamp:  0,
+                modifiedOn:Date.now(),
+                createdOn: Date.now(),
+                isDeleted: false,
+                isActive: true
             }
 
             rabbitMqController.insertInQueue(Config.SYNC_TRANSACTION_EXCHANGE, Config.SYNC_TRANSACTION_QUEUE, "", "", "", "", "", amqpConstants.exchangeType.FANOUT, amqpConstants.queueType.PUBLISHER_SUBSCRIBER_QUEUE, JSON.stringify([transactionObj]));
@@ -238,7 +260,7 @@ export default class Manger {
         catch (error) {
             if(error && error.message === 'connection not open on send()'){
             web3 = await WebSocketService.webSocketConnection(Config.WS_URL);
-            this.getTransactionDataFromSocket(data)
+            return await this.getTransactionDataFromSocket(data)
             }
             else throw error
         }
@@ -252,7 +274,12 @@ export default class Manger {
                 let accountDetail = {
                     address: data,
                     balance: balance,
-                    accountType: accountType
+                    accountType: accountType,
+                    timestamp: 0,
+                    createdOn: Date.now(),
+                    modifiedOn: Date.now(),
+                    isDeleted: false,
+                    isActive: true
                 }
                 rabbitMqController.insertInQueue(Config.SYNC_ACCOUNT_EXCHANGE, Config.SYNC_ACCOUNT_QUEUE, "", "", "", "", "", amqpConstants.exchangeType.FANOUT, amqpConstants.queueType.PUBLISHER_SUBSCRIBER_QUEUE, JSON.stringify(accountDetail));
                 return accountDetail;
@@ -260,7 +287,7 @@ export default class Manger {
         catch (error) {
             if(error && error.message === 'connection not open on send()'){
             web3 = await WebSocketService.webSocketConnection(Config.WS_URL);
-            await this.getAddressDataFromSocket(data)
+            return await this.getAddressDataFromSocket(data)
             }
             else 
             throw error
@@ -270,23 +297,46 @@ export default class Manger {
     getTokenDataFromSocket = async (data) =>{
         try{
             let rabbitMqController = new RabbitMqController();
-            const token = new web3.eth.Contract(ERC20ABI, data);
+            const call = await web3.eth.call({ to: data, data: web3.utils.sha3("totalSupply()") });
             let contractObj = {}
             contractObj.address = data;
+            contractObj.isTokenContract = false;
             contractObj.byteCode = await web3.eth.getCode(data);
+            if(call !== "0x"){
+            const token = new web3.eth.Contract(ERC20ABI, data);
             contractObj.tokenName = await token.methods.name().call();
             contractObj.symbol = await token.methods.symbol().call();
             contractObj.decimals = await token.methods.decimals().call();
             contractObj.totalSupply = await token.methods.totalSupply().call();
             contractObj.isTokenContract = true;
-            contractObj.ERC = await getERC(true);
+            }
+            else{
+            contractObj.tokenName = ""
+            contractObj.symbol = ""
+            contractObj.decimals = ""
+            contractObj.totalSupply = ""
+            }
+            contractObj.blockNumber =0;
+            contractObj.creationTransaction =  "" ;
+            contractObj.contractName = "" ;
+            contractObj.owner= "" ;
+            contractObj.compilerVersion= "" ;
+            contractObj.optimization= false ;
+            contractObj.sourceCode="" ;
+            contractObj.abi= "" ;
+            contractObj.createdOn= Date.now() ;
+            contractObj.modifiedOn= Date.now() ;
+            contractObj.isActive= true ;
+            contractObj.isDeleted= false ;
+            contractObj.ERC = await getERC(contractObj.isTokenContract);
             rabbitMqController.insertInQueue(Config.SYNC_CONTRACT_EXCHANGE, Config.SYNC_CONTRACT_QUEUE, "", "", "", "", "", amqpConstants.exchangeType.FANOUT, amqpConstants.queueType.PUBLISHER_SUBSCRIBER_QUEUE, JSON.stringify(contractObj));
+            if(call!=="0x")
             rabbitMqController.insertInQueue(Config.SYNC_TOKEN_EXCHANGE, Config.SYNC_TOKEN_QUEUE, "", "", "", "", "", amqpConstants.exchangeType.FANOUT, amqpConstants.queueType.PUBLISHER_SUBSCRIBER_QUEUE, JSON.stringify(contractObj));
             return contractObj;
         } catch (error) {
             if(error && error.message === 'connection not open on send()'){
             web3 = await WebSocketService.webSocketConnection(Config.WS_URL);
-            await this.getTokenDataFromSocket(data)
+            return await this.getTokenDataFromSocket(data)
             }
             else throw error
         }
@@ -303,7 +353,8 @@ export default class Manger {
         catch (error) {
             if(error && error.message === 'connection not open on send()'){
             web3 = await WebSocketService.webSocketConnection(Config.WS_URL);
-            this.getBlockDataFromSocket(data)
+             return await this.getBlockDataFromSocket(data)
+          
             } 
             else throw error
 
