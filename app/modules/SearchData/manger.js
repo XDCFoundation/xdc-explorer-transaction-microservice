@@ -114,6 +114,7 @@ export default class Manger {
     }
 
     searchAddress = async (data) => {
+        try{
         let responseStatus = []
         const call = await web3.eth.call({ to: data, data: web3.utils.sha3("totalSupply()") });
         if (call === "0x") {
@@ -143,6 +144,14 @@ export default class Manger {
             responseStatus.push({ 'redirect': 'token', token })
             return responseStatus;
         }
+    }catch(error)
+    {
+        if(error && error.message === 'connection not open on send()'){
+            web3 = await WebSocketService.webSocketConnection(Config.WS_URL);
+            this.searchAddress(data)
+            }
+            else throw error
+    }
 
     }
 
@@ -199,7 +208,7 @@ export default class Manger {
         if (account) {
             responseStatus.push({ 'redirect': 'address', account })
         }
-        account = this.searchAddress(data)
+        account =await this.getBlockDataFromSocket(data)
         if(account)
         responseStatus.push({ 'redirect': 'address', account })
         return responseStatus;
