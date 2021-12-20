@@ -6,7 +6,7 @@ import TokenModel from "../../models/contract";
 import { genericConstants, amqpConstants } from '../../common/constants';
 import RabbitMqController from "../queue/index";
 import Config from "../../../config";
-import WebSocketService from "../../service/WebsocketService";
+import WebSocketService from "../../service/WebsocketService";s
 let ERC20ABI = require("./jsonInterface").ERC20ABI;
 let ERCvalue = 0
 
@@ -14,8 +14,8 @@ export default class Manger {
 
     searchData = async (params) => {
         Utils.lhtLog("BLManager:searchBlockchainData", "searchBlockchainData started", "", "");
-        const { filter, data } = params;
-
+        let { filter, data } = params;
+        data= data.toLowerCase();
         let responseStatus = [], type = ""
         switch (filter) {
             case "All filters":
@@ -118,10 +118,10 @@ export default class Manger {
         try{
         // web3 = await WebSocketService.webSocketConnection("wss://LeewayHertzXDCWS.BlocksScan.io");   
         let responseStatus = []
-        const code =await web3.eth.getCode(data)
+        // const code =await web3.eth.getCode(data)
         // return new Promise(async function(resolve, reject) {
            
-        if (code === "0x") {
+        // if (code === "0x") {
           
             const findObjAddresses = { "address": data };
             let account = await AccountModel.getAccount(findObjAddresses);
@@ -130,11 +130,12 @@ export default class Manger {
                 responseStatus.push({ 'redirect': 'account', account })
                return responseStatus;
             }
-            account = await this.getAddressDataFromSocket(data)
-            if(account)
-            responseStatus.push({ 'redirect': 'account', account })
-            return responseStatus;
-        }
+            // account = await this.getAddressDataFromSocket(data)
+            // if(account){
+            // responseStatus.push({ 'redirect': 'account', account })
+            // return responseStatus;
+            // }
+        // }
             const findObj = {
                 "address": data,
                 "ERC": { $gte: 2 }
@@ -144,10 +145,28 @@ export default class Manger {
                 responseStatus.push({ 'redirect': 'token', token })
                 return responseStatus;
             }
-            token = await this.getTokenDataFromSocket(data)
-            if(token)
-            responseStatus.push({ 'redirect': 'token', token })
-            return responseStatus;
+            const code =await web3.eth.getCode(data);
+            let response;
+            if(code==="0x"){
+              response = await this.getAddressDataFromSocket(data)
+              if(response)
+              responseStatus.push({ 'redirect': 'account', response })
+            }
+            else
+             { response = await this.getTokenDataFromSocket(data)
+                if(response)
+                responseStatus.push({ 'redirect': 'token', response })
+             } 
+             return responseStatus;
+
+
+            // if(response) 
+            //    responseStatus.push({ 'redirect': 'token', token })
+            // token = await this.getTokenDataFromSocket(data)
+            // if(token){
+            // responseStatus.push({ 'redirect': 'token', token })
+            // return responseStatus;
+            // }
         
         
     // });
