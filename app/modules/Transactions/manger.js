@@ -88,12 +88,16 @@ export default class Manger {
             }))
         } else {
             Utils.lhtLog("BLManager:getTransactionsCountForAddress", "get total transaction count for address without keyword", "", "");
-            fromCount = Promise.resolve(TransactionModel.countData({from: address}))
+           /*
+           removed because of indexing
+            */
+
+            // fromCount = Promise.resolve(TransactionModel.countData({from: address}))
             toCount = Promise.resolve(TransactionModel.countData({to: address}))
         }
-        await fromCount.then((data) => {
-            totalCount += data
-        })
+        // await fromCount.then((data) => {
+        //     totalCount += data
+        // })
         await toCount.then((data) => {
             totalCount += data
         })
