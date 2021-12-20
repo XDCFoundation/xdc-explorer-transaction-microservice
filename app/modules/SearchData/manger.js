@@ -71,8 +71,9 @@ export default class Manger {
             return responseStatus;
         }
         if (!type) {
-            const findObjToken = { "tokenName": data, "ERC": { $gte: 2 } };
-            const token = await TokenModel.findOne(findObjToken);
+            const findObjToken = { "tokenName": data, "ERC": { $gte: 2 }
+         };
+            const token = await TokenModel.find(findObjToken);
             if (token) {
                 responseStatus.push({ 'redirect': 'token', token })
                 return responseStatus;
