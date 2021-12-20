@@ -6,7 +6,7 @@ import TokenModel from "../../models/contract";
 import { genericConstants, amqpConstants } from '../../common/constants';
 import RabbitMqController from "../queue/index";
 import Config from "../../../config";
-import WebSocketService from "../../service/WebsocketService";s
+import WebSocketService from "../../service/WebsocketService";
 let ERC20ABI = require("./jsonInterface").ERC20ABI;
 let ERCvalue = 0
 

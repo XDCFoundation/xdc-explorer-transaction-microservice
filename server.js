@@ -11,7 +11,10 @@ import AMQP from "./library";
 const app = new APP()
 require('./config/express')(app)
 global.lhtWebLog = Utils.lhtLog
-
+process.on('unhandledRejection', error => {
+  // Will print "unhandledRejection err is not defined"
+  console.log('unhandledRejection', error.message);
+});
 class Server {
   static listen () {
     Promise.all([
