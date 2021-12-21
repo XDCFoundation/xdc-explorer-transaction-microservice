@@ -15,7 +15,6 @@ export default class Manger {
     searchData = async (params) => {
         Utils.lhtLog("BLManager:searchBlockchainData", "searchBlockchainData started", "", "");
         let { filter, data } = params;
-        data= data.toLowerCase();
         let responseStatus = [], type = ""
         switch (filter) {
             case "All filters":
@@ -102,6 +101,7 @@ export default class Manger {
 
     searchBlock = async (data) => {
         let responseStatus = []
+        data=parseInt(data);
         let findObjBlock = { "number": data };
         let block = await BlockModel.findOne(findObjBlock);
         if (block) {
@@ -116,6 +116,7 @@ export default class Manger {
 
   async searchAddress (data) {
         try{
+            data=data.toLowerCase();
         // web3 = await WebSocketService.webSocketConnection("wss://LeewayHertzXDCWS.BlocksScan.io");   
         let responseStatus = []
         // const code =await web3.eth.getCode(data)
@@ -215,6 +216,7 @@ export default class Manger {
 
     searchTransaction = async (data) => {
         let responseStatus = []
+        data=data.toLowerCase();
         const findObj = { "hash": data };
         let transaction = await TransactionModel.findOne(findObj);
         if (transaction) {
@@ -229,6 +231,7 @@ export default class Manger {
     }
     searchAccount = async (data) => {
         let responseStatus = []
+        data=data.toLowerCase();
         const findObj = {
             "address": data
         };
@@ -262,7 +265,6 @@ export default class Manger {
                 gasPrice: 0,
                 input:  "",
                 nonce: 0,
-                transactionIndex: 0,
                 value: "",
                 r:  "",
                 s: "",

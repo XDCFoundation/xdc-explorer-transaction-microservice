@@ -37,14 +37,14 @@ export default class Manger {
         } else {
             Utils.lhtLog("BLManager:getAccountDetailsUsingAddress", "get total transaction without keyword", "", "");
 
-            // let fromTransaction = await TransactionModel.getTransactionList(
-            //     {from: address}, "", skip, limit, {}
-            // )
+            let fromTransaction = await TransactionModel.getTransactionList(
+                {from: address}, "", skip, limit, {}
+            )
             let toTransaction = await TransactionModel.getTransactionList(
                 {to: address}, "", skip, limit, {}
             )
-            return toTransaction;
-            // responseTransaction = [...fromTransaction, ...toTransaction]
+            // return toTransaction;
+            responseTransaction = [...fromTransaction, ...toTransaction]
 
         }
         return responseTransaction;
@@ -88,16 +88,14 @@ export default class Manger {
             }))
         } else {
             Utils.lhtLog("BLManager:getTransactionsCountForAddress", "get total transaction count for address without keyword", "", "");
-           /*
-           removed because of indexing
-            */
 
-            // fromCount = Promise.resolve(TransactionModel.countData({from: address}))
+
+            fromCount = Promise.resolve(TransactionModel.countData({from: address}))
             toCount = Promise.resolve(TransactionModel.countData({to: address}))
         }
-        // await fromCount.then((data) => {
-        //     totalCount += data
-        // })
+        await fromCount.then((data) => {
+            totalCount += data
+        })
         await toCount.then((data) => {
             totalCount += data
         })
