@@ -8,7 +8,7 @@ export default class Manger {
       
         let skip = 0
         let limit = 0
-
+        let contractAddress=pathParameters.contractAddress.toLowerCase();
         if (queryStringParameters && queryStringParameters.skip) {
             skip = queryStringParameters.skip
         }
@@ -16,18 +16,20 @@ export default class Manger {
         if (queryStringParameters && queryStringParameters.limit) {
             limit = queryStringParameters.limit
         }
-        return await TransferModel.getTokenList({contract: pathParameters.contractAddress}, {}, parseInt(skip), parseInt(limit), { timestamp: -1 });
+        return await TransferModel.getTokenList({contract: contractAddress}, {}, parseInt(skip), parseInt(limit), { timestamp: -1 });
        
     }
 
     getTotalTransferTransactionForToken= async(pathParameters)=>{
         Utils.lhtLog("BLManager:getTotalTransferTransactionForToken", "get total of TokenTransfer count", "", "");
-        return await TransferModel.countData({contract:pathParameters.contractAddress});
+        let contractAddress=pathParameters.contractAddress.toLowerCase();
+        return await TransferModel.countData({contract:contractAddress});
     }
 
     getTransferTransactionDetailsUsingHash= async(pathParameters)=>{
         Utils.lhtLog("BLManager:getTotalTransferTransactionForToken", "get total of TokenTransfer count", "", "");
-        return await TransferModel.getToken( {hash:pathParameters.hash})
+        let transactionHash=pathParameters.hash.toLowerCase();
+        return await TransferModel.getToken( {hash:transactionHash})
        
     }
     

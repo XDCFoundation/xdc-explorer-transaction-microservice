@@ -10,7 +10,7 @@ export default class Manger {
 
         let skip = parseInt(0)
         let limit = parseInt(1)
-        let address = pathParameter && pathParameter.address;
+        let address = pathParameter && pathParameter.address.toLowerCase();
         if (queryStringParameter && queryStringParameter.skip)
             skip = parseInt(queryStringParameter.skip)
 
@@ -110,7 +110,8 @@ export default class Manger {
     }
 
     getTransactionDetailsUsingHash = async (params) => {
-        const transaction = await TransactionModel.getTransaction({hash: params.hash});
+        let hash=params.hash.toLowerCase();
+        const transaction = await TransactionModel.getTransaction({hash: hash});
         if (!transaction)
             throw {message: apiFailureMessage.NO_TRANSACTION}
         return transaction;
