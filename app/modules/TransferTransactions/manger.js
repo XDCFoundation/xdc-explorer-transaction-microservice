@@ -1,6 +1,7 @@
 import Utils from '../../utils'
 import TransferModel from "../../models/transfer";
 import TransactionModel from "../../models/transaction";
+import ContractModel from "../../models/contract";
 
 export default class Manger {
   
@@ -33,6 +34,7 @@ export default class Manger {
         let response={};
         let transferToken= await TransferModel.getToken( {hash:transactionHash});
         const transaction = await TransactionModel.getTransaction({hash: transactionHash});
+        const contract = await ContractModel.getContractList({address: transferToken.contract},{decimals:1},0,1,"");
         if (!transaction){
             response={
                 hash:transferToken.hash,
@@ -43,6 +45,7 @@ export default class Manger {
                 contract: transferToken.contract,
                 value:transferToken.value,
                 timestamp: transferToken.timestamp,
+                decimals:contract&&contract[0]&&contract[0].decimals?contract[0].decimals:0,
                 nonce:0,
                 gasUsed:0,
                 gasPrice:0,
@@ -68,6 +71,7 @@ export default class Manger {
             gas:transaction.gas,
             transactionValue:transaction.value,
             input:transaction.input,
+            decimals:contract&&contract[0]&&contract[0].decimals?contract[0].decimals:0,
         }
         return response;
        
