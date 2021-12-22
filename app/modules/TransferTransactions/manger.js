@@ -46,6 +46,9 @@ export default class Manger {
                 value:transferToken.value,
                 timestamp: transferToken.timestamp,
                 decimals:contract&&contract[0]&&contract[0].decimals?contract[0].decimals:0,
+                symbol:contract&&contract[0]&&contract[0].symbol?contract[0].symbol:"",
+                tokenName:contract&&contract[0]&&contract[0].tokenName?contract[0].tokenName:"",
+                tokenSupply:contract&&contract[0]&&contract[0].tokenSupply?contract[0].tokenSupply:0,
                 nonce:0,
                 gasUsed:0,
                 gasPrice:0,
@@ -73,6 +76,9 @@ export default class Manger {
             transactionValue:transaction.value,
             input:transaction.input,
             decimals:contract&&contract[0]&&contract[0].decimals?contract[0].decimals:0,
+            symbol:contract&&contract[0]&&contract[0].symbol?contract[0].symbol:"",
+            tokenName:contract&&contract[0]&&contract[0].tokenName?contract[0].tokenName:"",
+            tokenSupply:contract&&contract[0]&&contract[0].tokenSupply?contract[0].tokenSupply:0,
             status:transaction.status
         }
         return response;
