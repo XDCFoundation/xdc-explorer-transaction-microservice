@@ -34,7 +34,7 @@ export default class Manger {
         let response={};
         let transferToken= await TransferModel.getToken( {hash:transactionHash});
         const transaction = await TransactionModel.getTransaction({hash: transactionHash});
-        const contract = await ContractModel.getContractList({address: transferToken.contract},{decimals:1},0,1,"");
+        const contract = await ContractModel.getContractList({address: transferToken.contract},{decimals:1,symbol:1,tokenName:1,totalSupply:1},0,1,"");
         if (!transaction){
             response={
                 hash:transferToken.hash,
@@ -48,7 +48,7 @@ export default class Manger {
                 decimals:contract&&contract[0]&&contract[0].decimals?contract[0].decimals:0,
                 symbol:contract&&contract[0]&&contract[0].symbol?contract[0].symbol:"",
                 tokenName:contract&&contract[0]&&contract[0].tokenName?contract[0].tokenName:"",
-                tokenSupply:contract&&contract[0]&&contract[0].tokenSupply?contract[0].tokenSupply:0,
+                totalSupply:contract&&contract[0]&&contract[0].totalSupply?contract[0].totalSupply:0,
                 nonce:0,
                 gasUsed:0,
                 gasPrice:0,
@@ -78,7 +78,7 @@ export default class Manger {
             decimals:contract&&contract[0]&&contract[0].decimals?contract[0].decimals:0,
             symbol:contract&&contract[0]&&contract[0].symbol?contract[0].symbol:"",
             tokenName:contract&&contract[0]&&contract[0].tokenName?contract[0].tokenName:"",
-            tokenSupply:contract&&contract[0]&&contract[0].tokenSupply?contract[0].tokenSupply:0,
+            totalSupply:contract&&contract[0]&&contract[0].totalSupply?contract[0].totalSupply:0,
             status:transaction.status
         }
         return response;
