@@ -51,7 +51,8 @@ export default class Manger {
                 gasPrice:0,
                 gas:0,
                 transactionValue:0,
-                input:""
+                input:"",
+                status:false
             }
             return response;
         }
@@ -72,6 +73,7 @@ export default class Manger {
             transactionValue:transaction.value,
             input:transaction.input,
             decimals:contract&&contract[0]&&contract[0].decimals?contract[0].decimals:0,
+            status:transaction.status
         }
         return response;
        
