@@ -38,10 +38,10 @@ export default class Manger {
             Utils.lhtLog("BLManager:getAccountDetailsUsingAddress", "get total transaction without keyword", "", "");
 
             let fromTransaction = await TransactionModel.getTransactionList(
-                {from: address}, "", skip, limit, {}
+                {from: address}, "", skip, limit, {blockNumber:-1}
             )
             let toTransaction = await TransactionModel.getTransactionList(
-                {to: address}, "", skip, limit, {}
+                {to: address}, "", skip, limit, {blockNumber:-1}
             )
             // return toTransaction;
             responseTransaction = [...fromTransaction, ...toTransaction]
