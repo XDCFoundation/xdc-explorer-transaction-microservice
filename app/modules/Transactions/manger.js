@@ -62,7 +62,7 @@ export default class Manger {
                     return (transaction2[sortKey] - transaction1[sortKey])
             })
         }
-        return responseTransaction.slice(limit);
+        return responseTransaction.slice(0 , limit);
     }
 
     getLatestTransactions = async (req) => {
