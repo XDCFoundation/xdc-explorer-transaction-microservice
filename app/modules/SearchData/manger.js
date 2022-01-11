@@ -151,12 +151,12 @@ export default class Manger {
             if(code==="0x"){
               response = await this.getAddressDataFromSocket(data)
               if(response)
-              responseStatus.push({ 'redirect': 'account', response })
+              responseStatus.push({ 'redirect': 'account', account:response })
             }
             else
              { response = await this.getTokenDataFromSocket(data)
                 if(response)
-                responseStatus.push({ 'redirect': 'token', response })
+                responseStatus.push({ 'redirect': 'token', token:response })
              } 
              return responseStatus;
 
