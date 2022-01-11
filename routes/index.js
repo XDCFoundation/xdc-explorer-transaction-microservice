@@ -19,6 +19,7 @@ module.exports = (app) => {
     app.get("/getLatestTransactions", ValidationManger.validateQuery, new Transactions().getLatestTransactions);
     app.get("/getTotalTransactions",  new Transactions().getTotalTransactions);
     app.get("/getTransactionsForAddress/:address",ValidationManger.validateQuery, new Transactions().getTransactionsForAddress);
+    app.post("/address-transaction-list/:address", new Transactions().getFilteredTransactionsForAddress);
     app.get("/getTransactionsCountForAddress/:address",  new Transactions().getTransactionsCountForAddress);
     app.get("/getSomeDaysTransactions/:days",  new Transactions().getSomeDaysTransactions);
     app.get("/getTransactionDetails/:hash",  new Transactions().getTransactionDetailsUsingHash);

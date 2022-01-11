@@ -9,6 +9,15 @@ export default class Index {
     if (!getMetersRes) { return Utils.handleError(error, request, response) }
     return Utils.response(response, getMetersRes, apiSuccessMessage.FETCH_SUCCESS, httpConstants.RESPONSE_STATUS.SUCCESS, httpConstants.RESPONSE_CODES.OK)
   }
+
+  async getFilteredTransactionsForAddress(request, response) {
+    Utils.lhtLog('Inside getFilteredTransactionsForAddress', request.params, 'getFilteredTransactionsForAddress', 0, '')
+    const [error, txnListResponse] = await Utils.parseResponse(new BLManager().getFilteredTransactionsForAddress({...request.params, ...request.query}))
+    if (!txnListResponse) {
+      return Utils.handleError(error, request, response)
+    }
+    return Utils.response(response, txnListResponse, apiSuccessMessage.FETCH_SUCCESS, httpConstants.RESPONSE_STATUS.SUCCESS, httpConstants.RESPONSE_CODES.OK)
+  }
   async getLatestTransactions (request , response) {
     Utils.lhtLog('Inside getLatestTransactions', request.query, 'getLatestTransactions', 0, '')
     const [error, getMetersRes] = await Utils.parseResponse(new BLManager().getLatestTransactions( request.query))

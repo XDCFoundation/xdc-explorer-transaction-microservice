@@ -67,6 +67,15 @@ export default class Manger {
         return responseTransaction.slice(0 , limit);
     }
 
+    getFilteredTransactionsForAddress = async (requestData) => {
+        if (!requestData) requestData = {}
+        const txnListRequest = this.parseGetTxnListRequest(requestData);
+        txnListRequest.requestData.$or = [{from: requestData.address}, {to: requestData.address}]
+        const accountList = await TransactionModel.getTransactionList(txnListRequest.requestData, txnListRequest.selectionKeys, txnListRequest.skip, txnListRequest.limit, txnListRequest.sorting);
+        let totalCount = await TransactionModel.count(txnListRequest.requestData)
+        return {accountList, totalCount};
+    }
+
     getLatestTransactions = async (req) => {
         Utils.lhtLog("BLManager:getLatestTransactions", "get getLatestTransactions count " + req, "", "");
         let skip = parseInt(req.skip ? req.skip : 0);
@@ -270,4 +279,41 @@ export default class Manger {
 
     }
 
+    parseGetTxnListRequest = (requestObj) => {
+        if (!requestObj) return {};
+        let skip = 0;
+        if (requestObj.skip || requestObj.skip === 0) {
+            skip = requestObj.skip;
+            delete requestObj.skip
+        }
+        let limit = 0;
+        if (requestObj.limit) {
+            limit = requestObj.limit;
+            delete requestObj.limit
+        }
+        let sorting = '';
+        if (requestObj.sortKey) {
+            sorting = {[requestObj.sortKey]: requestObj.sortType || -1};
+            delete requestObj.sortKey;
+            delete requestObj.sortType;
+        }
+        let selectionKeys = '';
+        if (requestObj.selectionKeys) {
+            selectionKeys = requestObj.selectionKeys;
+            delete requestObj.selectionKeys
+        }
+        let searchQuery = [];
+        if (requestObj.searchKeys && requestObj.searchValue && Array.isArray(requestObj.searchKeys) && requestObj.searchKeys.length) {
+            requestObj.searchKeys.map((searchKey) => {
+                let searchRegex = {"$regex": requestObj.searchValue, "$options": "i"};
+                searchQuery.push({[searchKey]: searchRegex});
+            });
+            requestObj["$or"] = searchQuery;
+        }
+        if (requestObj.searchKeys)
+            delete requestObj.searchKeys;
+        if (requestObj.searchValue)
+            delete requestObj.searchValue;
+        return {requestData: requestObj, skip, limit, sorting, selectionKeys};
+    }
 }
