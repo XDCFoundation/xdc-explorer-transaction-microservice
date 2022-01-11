@@ -1,8 +1,8 @@
 import Utils from '../../utils'
 import TransactionModel from "../../models/transaction";
 import TransactionHistoryModel from "../../models/historical";
+import { apiFailureMessage } from '../../common/constants';
 import AddressModel from "../../models/account";
-import {apiFailureMessage} from '../../common/constants';
 import AddressStatsModel from "../../models/addressStats";
 
 export default class Manger {
@@ -10,14 +10,23 @@ export default class Manger {
 
         Utils.lhtLog("BLManager:getAccountDetailsUsingAddress", "getAccountDetailsUsingAddress started", "", "");
 
-        let skip = parseInt(0)
-        let limit = parseInt(1)
+        let skip = parseInt(0),
+            limit = parseInt(1),
+            sortKey = "blockNumber",
+            sortType = -1;
         let address = pathParameter && pathParameter.address.toLowerCase();
         if (queryStringParameter && queryStringParameter.skip)
             skip = parseInt(queryStringParameter.skip)
 
         if (queryStringParameter && queryStringParameter.limit)
             limit = parseInt(queryStringParameter.limit)
+
+        if (queryStringParameter && queryStringParameter.sortKey)
+            sortKey = queryStringParameter.sortKey
+
+        if (queryStringParameter && queryStringParameter.sortType)
+            sortType = parseInt(queryStringParameter.sortType)
+
         let responseTransaction = []
 
         Utils.lhtLog("BLManager:getAccountDetailsUsingAddress", "get total transaction count", "", "");
@@ -27,30 +36,35 @@ export default class Manger {
                 {
                     $and: [{
                         to: address
-                    }, {hash: {$regex: ".*" + keyword + ".*", $options: 'i'}}]
+                    }, { hash: { $regex: ".*" + keyword + ".*", $options: 'i' } }]
                 }, "", skip, limit, {});
             let fromTransaction = await TransactionModel.getTransactionList(
                 {
                     $and: [{
                         from: address
-                    }, {hash: {$regex: ".*" + keyword + ".*", $options: 'i'}}]
+                    }, { hash: { $regex: ".*" + keyword + ".*", $options: 'i' } }]
                 }, "", skip, limit, {});
             responseTransaction = [...fromTransaction, ...toTransaction]
         } else {
             Utils.lhtLog("BLManager:getAccountDetailsUsingAddress", "get total transaction without keyword", "", "");
 
             let fromTransaction = await TransactionModel.getTransactionList(
-                {from: address}, "", skip, limit, {blockNumber:-1}
+                { from: address }, "", skip, limit, { [sortKey]: sortType }
             )
             let toTransaction = await TransactionModel.getTransactionList(
-                {to: address}, "", skip, limit, {blockNumber:-1}
+                { to: address }, "", skip, limit, { [sortKey]: sortType }
             )
             // return toTransaction;
             responseTransaction = [...fromTransaction, ...toTransaction]
 
+            responseTransaction = responseTransaction.sort((transaction1, transaction2) => {
+                if (sortType === 1)
+                    return (transaction1[sortKey] - transaction2[sortKey])
+                else
+                    return (transaction2[sortKey] - transaction1[sortKey])
+            })
         }
-        return responseTransaction;
-
+        return responseTransaction.slice(0 , limit);
     }
 
     getLatestTransactions = async (req) => {
@@ -77,7 +91,7 @@ export default class Manger {
                     to: address
                     // $or: [{ to: address },
                     // { from: address }]
-                }, {hash: {$regex: ".*" + keyword + ".*", $options: 'i'}}
+                }, { hash: { $regex: ".*" + keyword + ".*", $options: 'i' } }
                 ]
             }))
             fromCount = Promise.resolve(TransactionModel.countData({
@@ -85,15 +99,15 @@ export default class Manger {
                     from: address
                     // $or: [{ to: address },
                     // { from: address }]
-                }, {hash: {$regex: ".*" + keyword + ".*", $options: 'i'}}
+                }, { hash: { $regex: ".*" + keyword + ".*", $options: 'i' } }
                 ]
             }))
         } else {
             Utils.lhtLog("BLManager:getTransactionsCountForAddress", "get total transaction count for address without keyword", "", "");
 
 
-            fromCount = Promise.resolve(TransactionModel.countData({from: address}))
-            toCount = Promise.resolve(TransactionModel.countData({to: address}))
+            fromCount = Promise.resolve(TransactionModel.countData({ from: address }))
+            toCount = Promise.resolve(TransactionModel.countData({ to: address }))
         }
         await fromCount.then((data) => {
             totalCount += data
