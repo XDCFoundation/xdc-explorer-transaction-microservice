@@ -1,7 +1,9 @@
 import Utils from '../../utils'
 import TransactionModel from "../../models/transaction";
 import TransactionHistoryModel from "../../models/historical";
+import AddressModel from "../../models/account";
 import {apiFailureMessage} from '../../common/constants';
+import AddressStatsModel from "../../models/addressStats";
 
 export default class Manger {
     getTransactionsForAddress = async (pathParameter, queryStringParameter) => {
@@ -101,6 +103,142 @@ export default class Manger {
         })
         return totalCount;
 
+    }
+
+    getAddressStats = async (addressHash) => {
+        Utils.lhtLog("BLManager:getAddressStats", "getAddressStats started", "", "");
+        let addressStatsResponse = await AddressStatsModel.getAccount({address: addressHash});
+        Utils.lhtLog("BLManager:getAddressStats", "addressStatsResponse", addressStatsResponse, "");
+        let addressLastTransactionTimestamp = await this.getAddressLastTransaction(addressHash);
+        let transactionTimestamp=addressLastTransactionTimestamp &&addressLastTransactionTimestamp.length>0&& addressLastTransactionTimestamp[0].timestamp?addressLastTransactionTimestamp[0].timestamp:0;
+        Utils.lhtLog("BLManager:getAddressStats", "addressLastTransactionTimestamp "+transactionTimestamp, addressLastTransactionTimestamp, "");
+        if (!addressStatsResponse) {
+          return await this.AddressStatsDetails(addressHash,transactionTimestamp);
+        }
+        if (addressStatsResponse.timestamp === transactionTimestamp){
+            return addressStatsResponse;}
+        return await this.AddressStatsDetails(addressHash,transactionTimestamp);
+    }
+
+    async AddressStatsDetails(addressHash,lastTransactionTimestamp) {
+        let addressDetails = await AddressModel.getAccount({address: addressHash});
+        Utils.lhtLog("BLManager:getAddressStats", "transactionCount started", "", "");
+        let transactionCount = await this.getAddressTransactionsCountStats(addressHash);
+        Utils.lhtLog("BLManager:getAddressStats", "transactionHighestValue started", "", "");
+        let transactionHighestValue = await this.getAddressTransactionsHighestValueStats(addressHash);
+        Utils.lhtLog("BLManager:getAddressStats", "averageBalance started", "", "");
+        let averageBalance = await this.getAddressAverageBalanceStats(addressHash);
+        Utils.lhtLog("BLManager:getAddressStats", "gasUsed started", "", "");
+        let gasUsed = await this.getAddressGasUsedStats(addressHash);
+        Utils.lhtLog("BLManager:getAddressStats", "gasUsed end", "", "");
+        console.log(addressDetails, transactionCount, transactionHighestValue, averageBalance, gasUsed);
+        let reqObj = {
+            address: addressHash,
+            accountType: addressDetails.accountType,
+            balance: addressDetails.balance,
+            timestamp: addressDetails.timestamp,
+            avgBalance: averageBalance && averageBalance.length>0&& averageBalance[0].avgBalance?averageBalance[0].avgBalance:0,
+            gasFee: gasUsed && gasUsed.length>0 && gasUsed[0].gasFee?gasUsed[0].gasFee:0,
+            totalTransactionsCount: transactionCount.totalTransaction,
+            fromTransactionsCount: transactionCount.fromCount,
+            toTransactionsCount: transactionCount.toCount,
+            tokens: [],
+            highestTransaction: transactionHighestValue && transactionHighestValue.length>0 && transactionHighestValue[0].value?transactionHighestValue[0].value:0,
+            lastTransactionTimestamp: lastTransactionTimestamp,
+            createdOn: Date.now(),
+            modifiedOn: Date.now(),
+            isDeleted: false,
+            isActive: true
+        }
+        let addressStatsModel = new AddressStatsModel(reqObj);
+        return await addressStatsModel.saveData();
+    }
+
+
+    async getAddressLastTransaction(addressHash) {
+        if (!addressHash)
+            return {};
+        return TransactionModel.getTransactionList({$or: [{from: addressHash}, {to: addressHash}]}, {timestamp: 1}, 0, 1, {timestamp: -1});
+    }
+
+    async getAddressTransactionsCountStats(address) {
+        if (!address)
+            return {};
+        let toTransactionCount = await TransactionModel.countData({to: address})
+        let fromTransactionCount = await TransactionModel.countData({from: address})
+        return {
+            fromCount: fromTransactionCount,
+            toCount: toTransactionCount,
+            totalTransaction: fromTransactionCount + toTransactionCount
+        }
+    }
+
+    async getAddressTransactionsHighestValueStats(address) {
+        if (!address)
+            return {};
+        return await TransactionModel.getTransactionList({$or: [{from: address}, {to: address}]}, {value: 1}, 0, 1, {value: -1});
+    }
+
+    async getAddressAverageBalanceStats(address) {
+        if (!address)
+            return {};
+        return TransactionModel.aggregate(
+            [
+                {
+                    $match: {
+                        from: address
+                    }
+                }, {
+                $group: {
+                    _id: "$from",
+                    avgBalance: {$avg: "$value"}
+                }
+            }
+            ]
+        );
+    }
+
+    async getAddressGasUsedStats(address) {
+        if (!address)
+            return {};
+        return TransactionModel.aggregate(
+            [
+                {
+                    $match: {
+                        $or: [{from: address}, {to: address}]
+                    }
+                }, {
+                $group: {
+                    _id: {
+                        $or: {
+                            $or: [{from: address}, {to: address}]
+                        }
+                    },
+                    gasFee: {$sum: "$gasUsed"}
+                }
+            }
+            ]
+        );
+    }
+
+
+    async getAddressTokenStats(address) {
+        if (!address)
+            return {};
+        return TransactionModel.aggregate(
+            [
+                {
+                    $match: {
+                        $or: [{from: address}, {to: address}]
+                    }
+                }, {
+                $group: {
+                    _id: "$contractAddress",
+                    tokens: {$sum: 1}
+                }
+            }
+            ]
+        );
     }
 
     getSomeDaysTransactions = async (params) => {

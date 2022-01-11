@@ -22,6 +22,7 @@ module.exports = (app) => {
     app.get("/getTransactionsCountForAddress/:address",  new Transactions().getTransactionsCountForAddress);
     app.get("/getSomeDaysTransactions/:days",  new Transactions().getSomeDaysTransactions);
     app.get("/getTransactionDetails/:hash",  new Transactions().getTransactionDetailsUsingHash);
+    app.get("/getAddressStats/:address",  new Transactions().getAddressStats);
 
 
      /**
