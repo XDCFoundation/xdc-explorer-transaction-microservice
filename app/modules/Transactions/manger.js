@@ -67,14 +67,59 @@ export default class Manger {
         return responseTransaction.slice(0 , limit);
     }
 
+    getFiltersForAddressTxn = async (requestData) => {
+        const address = requestData.address
+        const [fromTransaction, toTransaction] = await Promise.all([
+            TransactionsModel.getTransactionList({from: address}, '', 0, 1, {createdOn: -1}),
+            TransactionsModel.getTransactionList({to: address}, '', 0, 1, {createdOn: -1})]);
+        if ((!fromTransaction || !fromTransaction.length) && (!toTransaction || !toTransaction.length))
+            return {startDate: new Date().getTime()}
+        else if (!fromTransaction || !fromTransaction.length)
+            return {startDate: toTransaction[0].timestamp * 1000}
+        else if (!toTransaction || !toTransaction.length)
+            return {startDate: fromTransaction[0].timestamp * 1000}
+        else return {startDate: fromTransaction[0].timestamp > toTransaction[0].timestamp ? toTransaction[0].timestamp * 1000 : fromTransaction[0].timestamp * 1000}
+    };
+
     getFilteredTransactionsForAddress = async (requestData) => {
         if (!requestData) requestData = {}
+        const address = requestData.address
+        const txnType = requestData.txnType
+        const startDate = requestData.startDate
+        const endDate = requestData.endDate
+        const sortKey = requestData.sortKey
+        const sortType = requestData.sortType
+
+        let responseTransactions
+
         const txnListRequest = this.parseGetTxnListRequest(requestData);
-        txnListRequest.requestData.$or = [{from: requestData.address}, {to: requestData.address}]
-        const accountList = await TransactionModel.getTransactionList(txnListRequest.requestData, txnListRequest.selectionKeys, txnListRequest.skip, txnListRequest.limit, txnListRequest.sorting);
-        let totalCount = await TransactionModel.count(txnListRequest.requestData)
-        return {accountList, totalCount};
-    }
+        delete txnListRequest.requestData.address
+        delete txnListRequest.requestData.txnType
+        delete txnListRequest.requestData.startDate
+        delete txnListRequest.requestData.endDate
+
+        if (startDate && endDate)
+            txnListRequest.requestData.timestamp = {$gte: startDate / 1000, $lte: endDate / 1000}
+        const [fromTransaction, toTransaction] = await Promise.all([TransactionsModel.getTransactionList({
+            ...txnListRequest.requestData, from: address
+        }, txnListRequest.selectionKeys, txnListRequest.skip, txnListRequest.limit, txnListRequest.sorting), TransactionsModel.getTransactionList({
+            ...txnListRequest.requestData, to: address
+        }, txnListRequest.selectionKeys, txnListRequest.skip, txnListRequest.limit, txnListRequest.sorting)]);
+
+        if (txnType)
+            return txnType === 'IN' ? toTransaction : fromTransaction;
+
+        responseTransactions = [...fromTransaction, ...toTransaction]
+        responseTransactions.sort((transaction1, transaction2) => {
+            if (sortType === 1)
+                return (transaction1[sortKey] - transaction2[sortKey])
+            else
+                return (transaction2[sortKey] - transaction1[sortKey])
+        })
+
+        return responseTransactions.slice(0, txnListRequest.limit)
+    };
+
 
     getLatestTransactions = async (req) => {
         Utils.lhtLog("BLManager:getLatestTransactions", "get getLatestTransactions count " + req, "", "");
@@ -286,7 +331,7 @@ export default class Manger {
             skip = requestObj.skip;
             delete requestObj.skip
         }
-        let limit = 0;
+        let limit = 10;
         if (requestObj.limit) {
             limit = requestObj.limit;
             delete requestObj.limit
