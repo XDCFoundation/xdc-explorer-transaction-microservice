@@ -14,10 +14,13 @@ export default class Manger {
         return await TransferModel.getTokenList(txnListRequest.requestData, {}, parseInt(txnListRequest.skip), parseInt(txnListRequest.limit), {timestamp: -1});
     }
 
-    getTotalTransferTransactionForToken= async(pathParameters)=>{
-        Utils.lhtLog("BLManager:getTotalTransferTransactionForToken", "get total of TokenTransfer count", "", "");
-        let contractAddress=pathParameters.contractAddress.toLowerCase();
-        return await TransferModel.countData({contract:contractAddress});
+    getTotalTransferTransactionForToken= async(requestData)=>{
+        const contract = requestData.contractAddress.toLowerCase();
+        requestData.searchKeys = ['hash', 'from', 'to']
+        requestData.contract=contract
+        delete requestData.contractAddress;
+        const txnListRequest = this.parseGetTxnListRequest(requestData);
+        return await TransferModel.countData(txnListRequest.requestData);
     }
 
     getTransferTransactionDetailsUsingHash= async(pathParameters)=>{
