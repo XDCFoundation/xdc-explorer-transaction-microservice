@@ -44,7 +44,7 @@ TokenTransferSchema.static({
         return this.bulkWrite(bulkOps);
     },
     countData: function (query) {
-        return this.count(query);
+        return this.countDocuments(query);
     }
 });
 module.exports = mongoose.model("xin-transfertoken", TokenTransferSchema);

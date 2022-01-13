@@ -4,23 +4,26 @@ import TransactionModel from "../../models/transaction";
 import ContractModel from "../../models/contract";
 
 export default class Manger {
-
-    getListOfTransferTransactionsForToken = async (requestData) => {
+    getTransferListRequest = (requestData) => {
         const contract = requestData.contractAddress.toLowerCase();
+        const startDate = requestData.startDate;
         requestData.searchKeys = ['hash', 'from', 'to']
         requestData.contract = contract
         delete requestData.contractAddress;
+        delete requestData.startDate;
         const txnListRequest = this.parseGetTxnListRequest(requestData);
-        return await TransferModel.getTokenList(txnListRequest.requestData, {}, parseInt(txnListRequest.skip), parseInt(txnListRequest.limit), {timestamp: -1});
+        if (startDate)
+            txnListRequest.requestData.timestamp = {$gte: startDate / 1000, $lte: new Date().getTime() / 1000}
+        return txnListRequest
+    }
+    getListOfTransferTransactionsForToken = async (requestData) => {
+        const txnListRequest = await this.getTransferListRequest(requestData);
+        return TransferModel.getTokenList(txnListRequest.requestData, {}, parseInt(txnListRequest.skip), parseInt(txnListRequest.limit), {timestamp: -1});
     }
 
-    getTotalTransferTransactionForToken= async(requestData)=>{
-        const contract = requestData.contractAddress.toLowerCase();
-        requestData.searchKeys = ['hash', 'from', 'to']
-        requestData.contract = contract
-        delete requestData.contractAddress;
-        const txnListRequest = this.parseGetTxnListRequest(requestData);
-        return await TransferModel.countData(txnListRequest.requestData);
+    getTotalTransferTransactionForToken = async (requestData) => {
+        const txnListRequest = await this.getTransferListRequest(requestData);
+        return TransferModel.countDocuments(txnListRequest.requestData);
     }
 
     getTransferTransactionDetailsUsingHash= async(pathParameters)=>{
