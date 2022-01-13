@@ -195,7 +195,9 @@ export default class Manger {
         let getAddressTokenStats = await this.getAddressTokenStats(addressHash);
         Utils.lhtLog("BLManager:getAddressStats", "averageBalance started", getAddressTokenStats, "");
         let stats = await this.getAddressAllStats(addressHash);
-        let highestTransaction = stats && stats.length > 0 && Number(stats[0].toMaxTransactionValue) > Number(stats[0].fromMaxTransactionValue) ? Number(stats[0].toMaxTransactionValue) : Number(stats[0].fromMaxTransactionValue);
+        let toMaxTransaction=stats && stats.length > 0 ? Number(stats[0].toMaxTransactionValue):0;
+        let fromMaxTransaction=stats && stats.length > 0 ? Number(stats[0].fromMaxTransactionValue):0;
+        let highestTransaction =  toMaxTransaction> fromMaxTransaction? toMaxTransaction : fromMaxTransaction;
         let totalTransactionsCount = stats && stats.length > 0 ? stats[0].fromTransaction + stats[0].toTransaction : 0;
         Utils.lhtLog("BLManager:getAddressStats", "averageBalance started", getAddressTokenStats, "");
         let reqObj = {
@@ -224,9 +226,11 @@ export default class Manger {
     async getAddressLastTransaction(addressHash) {
         if (!addressHash)
             return {};
-        let fromTimestmap = await TransactionModel.getTransactionList({from: addressHash}, {timestamp: 1,blockNumber:1}, 0, 1, {blockNumber: -1});
-        let toTimestamp = await TransactionModel.getTransactionList({to: addressHash}, {timestamp: 1,blockNumber:1}, 0, 1, {blockNumber: -1});
-        return fromTimestmap > toTimestamp ? fromTimestmap[0].timestamp : toTimestamp[0].timestamp;
+        let fromDetails = await TransactionModel.getTransactionList({from: addressHash}, {timestamp: 1,blockNumber:1}, 0, 1, {blockNumber: -1});
+        let toDetails = await TransactionModel.getTransactionList({to: addressHash}, {timestamp: 1,blockNumber:1}, 0, 1, {blockNumber: -1});
+        let fromTimestamp=fromDetails && fromDetails.length>0?fromDetails[0].timestamp:0;
+        let toTimestamp=toDetails && toDetails.length>0?toDetails[0].timestamp:0;
+        return fromTimestamp > toTimestamp ? fromTimestamp : toTimestamp;
     }
 
 
