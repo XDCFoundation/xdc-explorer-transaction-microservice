@@ -202,9 +202,9 @@ export default class Manger {
         Utils.lhtLog("BLManager:getAddressStats", "averageBalance started", getAddressTokenStats, "");
         let reqObj = {
             address: addressHash,
-            accountType: addressDetails.accountType,
-            balance: addressDetails.balance,
-            timestamp: addressDetails.timestamp,
+            accountType:addressDetails && addressDetails.accountType ? addressDetails.accountType:"",
+            balance: addressDetails && addressDetails.balance ?addressDetails.balance :0 ,
+            timestamp: addressDetails && addressDetails.timestamp ?addressDetails.timestamp:0,
             avgBalance: totalTransactionsCount > 0 ? highestTransaction / totalTransactionsCount : highestTransaction,
             gasFee: stats && stats.length > 0 ? stats[0].toGasFee + stats[0].fromGasFee : 0,
             totalTransactionsCount: totalTransactionsCount,
