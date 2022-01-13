@@ -4,28 +4,23 @@ import TransactionModel from "../../models/transaction";
 import ContractModel from "../../models/contract";
 
 export default class Manger {
-  
-    getListOfTransferTransactionsForToken = async(pathParameters,queryStringParameters)=>{
-        Utils.lhtLog("BLManager:getListOfTransferTransactionsForToken", "get list of TokenTransfer", "", "");
-      
-        let skip = 0
-        let limit = 0
-        let contractAddress=pathParameters.contractAddress.toLowerCase();
-        if (queryStringParameters && queryStringParameters.skip) {
-            skip = queryStringParameters.skip
-        }
 
-        if (queryStringParameters && queryStringParameters.limit) {
-            limit = queryStringParameters.limit
-        }
-        return await TransferModel.getTokenList({contract: contractAddress}, {}, parseInt(skip), parseInt(limit), { timestamp: -1 });
-       
+    getListOfTransferTransactionsForToken = async (requestData) => {
+        const contract = requestData.contractAddress.toLowerCase();
+        requestData.searchKeys = ['hash', 'from', 'to']
+        requestData.contract = contract
+        delete requestData.contractAddress;
+        const txnListRequest = this.parseGetTxnListRequest(requestData);
+        return await TransferModel.getTokenList(txnListRequest.requestData, {}, parseInt(txnListRequest.skip), parseInt(txnListRequest.limit), {timestamp: -1});
     }
 
-    getTotalTransferTransactionForToken= async(pathParameters)=>{
-        Utils.lhtLog("BLManager:getTotalTransferTransactionForToken", "get total of TokenTransfer count", "", "");
-        let contractAddress=pathParameters.contractAddress.toLowerCase();
-        return await TransferModel.countData({contract:contractAddress});
+    getTotalTransferTransactionForToken= async(requestData)=>{
+        const contract = requestData.contractAddress.toLowerCase();
+        requestData.searchKeys = ['hash', 'from', 'to']
+        requestData.contract = contract
+        delete requestData.contractAddress;
+        const txnListRequest = this.parseGetTxnListRequest(requestData);
+        return await TransferModel.countData(txnListRequest.requestData);
     }
 
     getTransferTransactionDetailsUsingHash= async(pathParameters)=>{
@@ -82,8 +77,44 @@ export default class Manger {
             status:transaction.status
         }
         return response;
-       
-    }
-    
 
+    }
+
+    parseGetTxnListRequest = (requestObj) => {
+        if (!requestObj) return {};
+        let skip = 0;
+        if (requestObj.skip || requestObj.skip === 0) {
+            skip = requestObj.skip;
+            delete requestObj.skip
+        }
+        let limit = 10;
+        if (requestObj.limit) {
+            limit = requestObj.limit;
+            delete requestObj.limit
+        }
+        let sorting = '';
+        if (requestObj.sortKey) {
+            sorting = {[requestObj.sortKey]: requestObj.sortType || -1};
+            delete requestObj.sortKey;
+            delete requestObj.sortType;
+        }
+        let selectionKeys = '';
+        if (requestObj.selectionKeys) {
+            selectionKeys = requestObj.selectionKeys;
+            delete requestObj.selectionKeys
+        }
+        let searchQuery = [];
+        if (requestObj.searchKeys && requestObj.searchValue && Array.isArray(requestObj.searchKeys) && requestObj.searchKeys.length) {
+            requestObj.searchKeys.map((searchKey) => {
+                let searchRegex = {"$regex": requestObj.searchValue, "$options": "i"};
+                searchQuery.push({[searchKey]: searchRegex});
+            });
+            requestObj["$or"] = searchQuery;
+        }
+        if (requestObj.searchKeys)
+            delete requestObj.searchKeys;
+        if (requestObj.searchValue)
+            delete requestObj.searchValue;
+        return {requestData: requestObj, skip, limit, sorting, selectionKeys};
+    }
 }

@@ -68,6 +68,60 @@ export default class Manger {
         return responseTransaction.slice(0, limit);
     }
 
+    getFiltersForAddressTxn = async (requestData) => {
+        const address = requestData.address
+        const [fromTransaction, toTransaction] = await Promise.all([
+            TransactionModel.getTransactionList({from: address}, '', 0, 1, {timestamp: -1}),
+            TransactionModel.getTransactionList({to: address}, '', 0, 1, {timestamp: -1})]);
+        if ((!fromTransaction || !fromTransaction.length) && (!toTransaction || !toTransaction.length))
+            return {startDate: new Date().getTime()}
+        else if (!fromTransaction || !fromTransaction.length)
+            return {startDate: toTransaction[0].timestamp * 1000}
+        else if (!toTransaction || !toTransaction.length)
+            return {startDate: fromTransaction[0].timestamp * 1000}
+        else return {startDate: fromTransaction[0].timestamp > toTransaction[0].timestamp ? toTransaction[0].timestamp * 1000 : fromTransaction[0].timestamp * 1000}
+    };
+
+    getFilteredTransactionsForAddress = async (requestData) => {
+        if (!requestData) requestData = {}
+        const address = requestData.address
+        const txnType = requestData.txnType
+        const startDate = requestData.startDate
+        const endDate = requestData.endDate
+        const sortKey = requestData.sortKey
+        const sortType = requestData.sortType
+
+        let responseTransactions
+
+        const txnListRequest = this.parseGetTxnListRequest(requestData);
+        delete txnListRequest.requestData.address
+        delete txnListRequest.requestData.txnType
+        delete txnListRequest.requestData.startDate
+        delete txnListRequest.requestData.endDate
+
+        if (startDate && endDate)
+            txnListRequest.requestData.timestamp = {$gte: startDate / 1000, $lte: endDate / 1000}
+        const [fromTransaction, toTransaction] = await Promise.all([TransactionModel.getTransactionList({
+            ...txnListRequest.requestData, from: address
+        }, txnListRequest.selectionKeys, txnListRequest.skip, txnListRequest.limit, txnListRequest.sorting), TransactionModel.getTransactionList({
+            ...txnListRequest.requestData, to: address
+        }, txnListRequest.selectionKeys, txnListRequest.skip, txnListRequest.limit, txnListRequest.sorting)]);
+
+        if (txnType)
+            return txnType === 'IN' ? toTransaction : fromTransaction;
+
+        responseTransactions = [...fromTransaction, ...toTransaction]
+        responseTransactions.sort((transaction1, transaction2) => {
+            if (sortType === 1)
+                return (transaction1[sortKey] - transaction2[sortKey])
+            else
+                return (transaction2[sortKey] - transaction1[sortKey])
+        })
+
+        return responseTransactions.slice(0, txnListRequest.limit)
+    };
+
+
     getLatestTransactions = async (req) => {
         Utils.lhtLog("BLManager:getLatestTransactions", "get getLatestTransactions count " + req, "", "");
         let skip = parseInt(req.skip ? req.skip : 0);
@@ -299,4 +353,41 @@ export default class Manger {
 
     }
 
+    parseGetTxnListRequest = (requestObj) => {
+        if (!requestObj) return {};
+        let skip = 0;
+        if (requestObj.skip || requestObj.skip === 0) {
+            skip = requestObj.skip;
+            delete requestObj.skip
+        }
+        let limit = 10;
+        if (requestObj.limit) {
+            limit = requestObj.limit;
+            delete requestObj.limit
+        }
+        let sorting = '';
+        if (requestObj.sortKey) {
+            sorting = {[requestObj.sortKey]: requestObj.sortType || -1};
+            delete requestObj.sortKey;
+            delete requestObj.sortType;
+        }
+        let selectionKeys = '';
+        if (requestObj.selectionKeys) {
+            selectionKeys = requestObj.selectionKeys;
+            delete requestObj.selectionKeys
+        }
+        let searchQuery = [];
+        if (requestObj.searchKeys && requestObj.searchValue && Array.isArray(requestObj.searchKeys) && requestObj.searchKeys.length) {
+            requestObj.searchKeys.map((searchKey) => {
+                let searchRegex = {"$regex": requestObj.searchValue, "$options": "i"};
+                searchQuery.push({[searchKey]: searchRegex});
+            });
+            requestObj["$or"] = searchQuery;
+        }
+        if (requestObj.searchKeys)
+            delete requestObj.searchKeys;
+        if (requestObj.searchValue)
+            delete requestObj.searchValue;
+        return {requestData: requestObj, skip, limit, sorting, selectionKeys};
+    }
 }
