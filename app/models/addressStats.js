@@ -32,7 +32,8 @@ AddressStatSchema.static({
     },
     updateAccount: function (findObj, updateObj) {
         return this.findOneAndUpdate(findObj, updateObj, {
-            returnNewDocument: true,
+            returnOriginal: true,
+            upsert: true
         });
     },
     updateManyAccounts: function (findObj, updateObj) {
