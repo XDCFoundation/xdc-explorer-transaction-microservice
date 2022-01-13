@@ -205,7 +205,7 @@ export default class Manger {
             timestamp: addressDetails.timestamp,
             avgBalance: totalTransactionsCount > 0 ? highestTransaction / totalTransactionsCount : highestTransaction,
             gasFee: stats && stats.length > 0 ? stats[0].toGasFee + stats[0].fromGasFee : 0,
-            totalTransactionCount: totalTransactionsCount,
+            totalTransactionsCount: totalTransactionsCount,
             fromTransactionsCount: stats && stats.length > 0 ? stats[0].fromTransaction : 0,
             toTransactionsCount: stats && stats.length > 0 ? stats[0].toTransaction : 0,
             tokens: getAddressTokenStats && getAddressTokenStats.length > 0 ? [getAddressTokenStats[0].uniqueTokenCount] : [],
@@ -224,9 +224,8 @@ export default class Manger {
     async getAddressLastTransaction(addressHash) {
         if (!addressHash)
             return {};
-        let fromTimestmap = await TransactionModel.getTransactionList({from: addressHash}, {timestamp: 1}, 0, 1, {timestamp: -1});
-        let toTimestamp = await TransactionModel.getTransactionList({to: addressHash}, {timestamp: 1}, 0, 1, {timestamp: -1});
-        console.log("from to", fromTimestmap, toTimestamp);
+        let fromTimestmap = await TransactionModel.getTransactionList({from: addressHash}, {timestamp: 1,blockNumber:1}, 0, 1, {blockNumber: -1});
+        let toTimestamp = await TransactionModel.getTransactionList({to: addressHash}, {timestamp: 1,blockNumber:1}, 0, 1, {blockNumber: -1});
         return fromTimestmap > toTimestamp ? fromTimestmap[0].timestamp : toTimestamp[0].timestamp;
     }
 
