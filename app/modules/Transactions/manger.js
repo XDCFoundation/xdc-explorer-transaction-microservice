@@ -175,6 +175,7 @@ export default class Manger {
     }
 
     getAddressStats = async (addressHash) => {
+        addressHash=addressHash.toLowerCase();
         Utils.lhtLog("BLManager:getAddressStats", "getAddressStats started", "", "");
         let addressStatsResponse = await AddressStatsModel.getAccount({address: addressHash});
         Utils.lhtLog("BLManager:getAddressStats", "addressStatsResponse", addressStatsResponse, "");
