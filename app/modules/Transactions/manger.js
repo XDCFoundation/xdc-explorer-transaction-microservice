@@ -181,23 +181,24 @@ export default class Manger {
         let getAddressTokenStats = await this.getAddressTokenStats(addressHash);
         Utils.lhtLog("BLManager:getAddressStats", "averageBalance started", getAddressTokenStats, "");
         let stats = await this.getAddressAllStats(addressHash);
-        let toMaxTransaction=stats && stats.length > 0 ? Number(stats[0].toMaxTransactionValue):0;
-        let fromMaxTransaction=stats && stats.length > 0 ? Number(stats[0].fromMaxTransactionValue):0;
-        let highestTransaction =  toMaxTransaction> fromMaxTransaction? toMaxTransaction : fromMaxTransaction;
-        let totalTransactionsCount = stats && stats.length > 0 ? stats[0].fromTransaction + stats[0].toTransaction : 0;
+        let fromAndToTransactions= await this.getAddressTransactionsCountStats(addressHash);
+        // let toMaxTransaction=stats && stats.length > 0 ? Number(stats[0].toMaxTransactionValue):0;
+        // let fromMaxTransaction=stats && stats.length > 0 ? Number(stats[0].fromMaxTransactionValue):0;
+        // let totalTransactionsCount = stats && stats.length > 0 ? stats[0].fromTransaction + stats[0].toTransaction : 0;
+        let highestTransaction = stats && stats.length > 0?stats[0].highestTransaction:0;
         Utils.lhtLog("BLManager:getAddressStats", "averageBalance started", getAddressTokenStats, "");
         let reqObj = {
             address: addressHash,
             accountType:addressDetails && addressDetails.accountType ? addressDetails.accountType:"",
             balance: addressDetails && addressDetails.balance ?addressDetails.balance :0 ,
             timestamp: addressDetails && addressDetails.timestamp ?addressDetails.timestamp:0,
-            avgBalance: totalTransactionsCount > 0 ? highestTransaction / totalTransactionsCount : highestTransaction,
-            gasFee: stats && stats.length > 0 ? stats[0].toGasFee + stats[0].fromGasFee : 0,
-            totalTransactionsCount: totalTransactionsCount,
-            fromTransactionsCount: stats && stats.length > 0 ? stats[0].fromTransaction : 0,
-            toTransactionsCount: stats && stats.length > 0 ? stats[0].toTransaction : 0,
+            avgBalance:  highestTransaction /  fromAndToTransactions.totalTransaction,
+            gasFee: stats && stats.length > 0?stats[0].gasFee:0,
+            totalTransactionsCount:  fromAndToTransactions.totalTransaction,
+            fromTransactionsCount: fromAndToTransactions.fromCount,
+            toTransactionsCount:  fromAndToTransactions.toCount,
             tokens: getAddressTokenStats && getAddressTokenStats.length > 0 ? [getAddressTokenStats[0].uniqueTokenCount] : [],
-            highestTransaction: highestTransaction,
+            highestTransaction:highestTransaction ,
             lastTransactionTimestamp: lastTransactionTimestamp,
             createdOn: Date.now(),
             modifiedOn: Date.now(),
@@ -233,34 +234,10 @@ export default class Manger {
                 {
                     $group: {
                         _id: {
-                            from: address
+                            $or: [{from: address}, {to: address}]
                         },
-                        fromTransaction: {$sum: 1},
-                        fromGasFee: {$sum: "$gasUsed"},
-                        fromMaxTransactionValue: {$max: "$value"}
-                    }
-                },
-                {
-                    $group: {
-                        _id: {
-                            to: address
-                        },
-                        toTransaction: {$sum: 1},
-                        toGasFee: {$sum: "$gasUsed"},
-                        toMaxTransactionValue: {$max: "$value"},
-                        fromTransaction: {$sum: "$fromTransaction"},
-                        fromGasFee: {$sum: "$fromGasFee"},
-                        fromMaxTransactionValue: {$max: "$fromMaxTransactionValue"}
-                    }
-                },
-                {
-                    $project: {
-                        fromTransaction: 1,
-                        fromGasFee: 1,
-                        fromMaxTransactionValue: 1,
-                        toTransaction: 1,
-                        toGasFee: 1,
-                        toMaxTransactionValue: 1
+                        gasFee: {$sum: "$gasUsed"},
+                        highestTransaction: {$max: "$value"}
                     }
                 }
             ]
