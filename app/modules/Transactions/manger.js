@@ -134,44 +134,27 @@ export default class Manger {
         return await TransactionModel.countData({});
     }
 
-    getTransactionsCountForAddress = async (pathParameter, queryStringParameter) => {
-        Utils.lhtLog("BLManager:getTransactionsCountForAddress", "getTransactionsCountForAddress started", "", "");
-        let address = pathParameter && pathParameter.address;
-        Utils.lhtLog("BLManager:getAccountDetailsUsingAddress", "get total transaction count for address", "", "");
-        let toCount = 0, fromCount = 0, totalCount = 0
-        if (queryStringParameter && queryStringParameter.keyword != null && queryStringParameter.keyword != '') {
-            let keyword = queryStringParameter.keyword
-            toCount = Promise.resolve(TransactionModel.countData({
-                $and: [{
-                    to: address
-                    // $or: [{ to: address },
-                    // { from: address }]
-                }, {hash: {$regex: ".*" + keyword + ".*", $options: 'i'}}
-                ]
-            }))
-            fromCount = Promise.resolve(TransactionModel.countData({
-                $and: [{
-                    from: address
-                    // $or: [{ to: address },
-                    // { from: address }]
-                }, {hash: {$regex: ".*" + keyword + ".*", $options: 'i'}}
-                ]
-            }))
-        } else {
-            Utils.lhtLog("BLManager:getTransactionsCountForAddress", "get total transaction count for address without keyword", "", "");
+    getTransactionsCountForAddress = async (requestData) => {
+        if (!requestData) requestData = {}
+        const address = requestData.address
+        const txnType = requestData.txnType
+        const startDate = requestData.startDate
+        const endDate = requestData.endDate
 
+        const txnListRequest = this.parseGetTxnListRequest(requestData);
+        delete txnListRequest.requestData.address
+        delete txnListRequest.requestData.txnType
+        delete txnListRequest.requestData.startDate
+        delete txnListRequest.requestData.endDate
 
-            fromCount = Promise.resolve(TransactionModel.countData({from: address}))
-            toCount = Promise.resolve(TransactionModel.countData({to: address}))
-        }
-        await fromCount.then((data) => {
-            totalCount += data
-        })
-        await toCount.then((data) => {
-            totalCount += data
-        })
-        return totalCount;
-
+        if (startDate && endDate)
+            txnListRequest.requestData.timestamp = {$gte: startDate / 1000, $lte: endDate / 1000}
+        const [fromCount, toCount] = await Promise.all([
+            TransactionModel.countDocuments({...txnListRequest.requestData, from: address}),
+            TransactionModel.countDocuments({...txnListRequest.requestData, to: address})]);
+        if (txnType)
+            return txnType === 'IN' ? toCount : fromCount
+        return (fromCount || 0) + (toCount || 0);
     }
 
     getAddressStats = async (addressHash) => {
