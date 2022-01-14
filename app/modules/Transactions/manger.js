@@ -71,8 +71,8 @@ export default class Manger {
     getFiltersForAddressTxn = async (requestData) => {
         const address = requestData.address
         const [fromTransaction, toTransaction] = await Promise.all([
-            TransactionModel.getTransactionList({from: address}, '', 0, 1, {timestamp: -1}),
-            TransactionModel.getTransactionList({to: address}, '', 0, 1, {timestamp: -1})]);
+            TransactionModel.getTransactionList({from: address}, '', 0, 1, {blockNumber: -1}),
+            TransactionModel.getTransactionList({to: address}, '', 0, 1, {blockNumber: -1})]);
         if ((!fromTransaction || !fromTransaction.length) && (!toTransaction || !toTransaction.length))
             return {startDate: new Date().getTime()}
         else if (!fromTransaction || !fromTransaction.length)
