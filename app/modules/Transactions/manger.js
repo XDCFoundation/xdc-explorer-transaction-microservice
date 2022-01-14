@@ -261,9 +261,7 @@ export default class Manger {
                         toMaxTransactionValue: 1
                     }
                 }
-            ],{
-
-            }
+            ]
         );
     }
 
