@@ -16,10 +16,10 @@ export default class Manger {
 
     getCoinMarketTotalSupply= async()=>{
         Utils.lhtLog("BLManager:getCoinMarketTotalSupply", "get  getCoinMarketTotalSupply ", "", "");
-        let coinMarketResponse = await CoinMasterModel.getCoinMarketCapList({}, 
-            "", 0, 1, { lastUpdated: -1 });           
-        let totalSupply = coinMarketResponse[0].totalSupply
-        return totalSupply;  
+        let coinMarketResponse = await CoinMasterModel.getCoinMarketCapList({totalSupply:{$gt:0}},
+            "", 0, 1, { lastUpdated: -1 });
+
+        return coinMarketResponse[0].totalSupply;
       }
 
     getCoinMarketExchangeForToken= async(requestData)=>{
