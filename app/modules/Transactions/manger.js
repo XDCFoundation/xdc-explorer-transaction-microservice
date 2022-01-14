@@ -140,6 +140,8 @@ export default class Manger {
         const txnType = requestData.txnType
         const startDate = requestData.startDate
         const endDate = requestData.endDate
+        if (requestData.searchValue)
+            requestData.searchKeys = ["hash", "from", "to"]
 
         const txnListRequest = this.parseGetTxnListRequest(requestData);
         delete txnListRequest.requestData.address
