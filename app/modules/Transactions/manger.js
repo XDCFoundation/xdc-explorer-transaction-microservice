@@ -4,7 +4,8 @@ import TransactionHistoryModel from "../../models/historical";
 import {apiFailureMessage} from '../../common/constants';
 import AddressModel from "../../models/account";
 import AddressStatsModel from "../../models/addressStats";
-import TokenTransferModel from "../../models/transfer";
+import TokenHolderModel from "../../models/tokenHolders";
+
 
 export default class Manger {
     getTransactionsForAddress = async (pathParameter, queryStringParameter) => {
@@ -160,7 +161,7 @@ export default class Manger {
     }
 
     getAddressStats = async (addressHash) => {
-        addressHash=addressHash.toLowerCase();
+        addressHash = addressHash.toLowerCase();
         Utils.lhtLog("BLManager:getAddressStats", "getAddressStats started", "", "");
         let addressStatsResponse = await AddressStatsModel.getAccount({address: addressHash});
         Utils.lhtLog("BLManager:getAddressStats", "addressStatsResponse", addressStatsResponse, "");
@@ -181,24 +182,22 @@ export default class Manger {
         let getAddressTokenStats = await this.getAddressTokenStats(addressHash);
         Utils.lhtLog("BLManager:getAddressStats", "averageBalance started", getAddressTokenStats, "");
         let stats = await this.getAddressAllStats(addressHash);
-        let fromAndToTransactions= await this.getAddressTransactionsCountStats(addressHash);
-        // let toMaxTransaction=stats && stats.length > 0 ? Number(stats[0].toMaxTransactionValue):0;
-        // let fromMaxTransaction=stats && stats.length > 0 ? Number(stats[0].fromMaxTransactionValue):0;
-        // let totalTransactionsCount = stats && stats.length > 0 ? stats[0].fromTransaction + stats[0].toTransaction : 0;
-        let highestTransaction = stats && stats.length > 0?stats[0].highestTransaction:0;
+        let fromAndToTransactions = await this.getAddressTransactionsCountStats(addressHash);
+        let highestTransaction = stats && stats.length > 0 ? stats[0].highestTransaction : 0;
         Utils.lhtLog("BLManager:getAddressStats", "averageBalance started", getAddressTokenStats, "");
+        let totalTransactionSum = stats && stats.length && stats[0].avgTransactions.reduce((a, b) => Number(a) + Number(b), 0);
         let reqObj = {
             address: addressHash,
-            accountType:addressDetails && addressDetails.accountType ? addressDetails.accountType:"",
-            balance: addressDetails && addressDetails.balance ?addressDetails.balance :0 ,
-            timestamp: addressDetails && addressDetails.timestamp ?addressDetails.timestamp:0,
-            avgBalance:  highestTransaction /  fromAndToTransactions.totalTransaction,
-            gasFee: stats && stats.length > 0?stats[0].gasFee:0,
-            totalTransactionsCount:  fromAndToTransactions.totalTransaction,
+            accountType: addressDetails && addressDetails.accountType ? addressDetails.accountType : "",
+            balance: addressDetails && addressDetails.balance ? addressDetails.balance : 0,
+            timestamp: addressDetails && addressDetails.timestamp ? addressDetails.timestamp : 0,
+            avgBalance: totalTransactionSum / fromAndToTransactions.totalTransaction,
+            gasFee: stats && stats.length > 0 ? stats[0].gasFee : 0,
+            totalTransactionsCount: fromAndToTransactions.totalTransaction,
             fromTransactionsCount: fromAndToTransactions.fromCount,
-            toTransactionsCount:  fromAndToTransactions.toCount,
-            tokens: getAddressTokenStats && getAddressTokenStats.length > 0 ? [getAddressTokenStats[0].uniqueTokenCount] : [],
-            highestTransaction:highestTransaction ,
+            toTransactionsCount: fromAndToTransactions.toCount,
+            tokens:  [getAddressTokenStats],
+            highestTransaction: highestTransaction,
             lastTransactionTimestamp: lastTransactionTimestamp,
             createdOn: Date.now(),
             modifiedOn: Date.now(),
@@ -208,7 +207,6 @@ export default class Manger {
         await AddressStatsModel.updateAccount({address: addressHash}, reqObj);
         return reqObj;
     }
-
 
     async getAddressLastTransaction(addressHash) {
         if (!addressHash)
@@ -233,11 +231,10 @@ export default class Manger {
                 },
                 {
                     $group: {
-                        _id: {
-                            $or: [{from: address}, {to: address}]
-                        },
+                        _id: null,
                         gasFee: {$sum: "$gasUsed"},
-                        highestTransaction: {$max: "$value"}
+                        highestTransaction: {$max: "$value"},
+                        avgTransactions: {$push: "$value"}
                     }
                 }
             ]
@@ -248,23 +245,7 @@ export default class Manger {
     async getAddressTokenStats(address) {
         if (!address)
             return {};
-        return TokenTransferModel.aggregate(
-            [
-                {
-                    $match: {
-                        $or: [{from: address}, {to: address}]
-                    }
-                }, {
-                $group: {
-                    _id: {
-                        $or: [{from: address}, {to: address}]
-                    },
-                    uniqueCount: {$addToSet: "$contract"}
-                }
-            },
-                {$project: {uniqueTokenCount: {$size: "$uniqueCount"}}}
-            ]
-        );
+        return TokenHolderModel.find({address: address}).count();
     }
 
     async getAddressTransactionsCountStats(address) {
