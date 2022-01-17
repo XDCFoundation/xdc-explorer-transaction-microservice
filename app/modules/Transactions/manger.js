@@ -183,9 +183,10 @@ export default class Manger {
         Utils.lhtLog("BLManager:getAddressStats", "averageBalance started", getAddressTokenStats, "");
         let stats = await this.getAddressAllStats(addressHash);
         let fromAndToTransactions = await this.getAddressTransactionsCountStats(addressHash);
-        let highestTransaction = stats && stats.length > 0 ? stats[0].highestTransaction : 0;
+        // let highestTransaction = stats && stats.length > 0 ? stats[0].highestTransaction : 0;
         Utils.lhtLog("BLManager:getAddressStats", "averageBalance started", getAddressTokenStats, "");
-        let totalTransactionSum = stats && stats.length && stats[0].avgTransactions.reduce((a, b) => Number(a) + Number(b), 0);
+        let highest=Math.max(...stats[0].avgTransactions);
+        let totalTransactionSum = stats && stats.length && stats[0].avgTransactions.reduce((a, b)=>Number(a)+Number(b),0);
         let reqObj = {
             address: addressHash,
             accountType: addressDetails && addressDetails.accountType ? addressDetails.accountType : "",
@@ -197,7 +198,7 @@ export default class Manger {
             fromTransactionsCount: fromAndToTransactions.fromCount,
             toTransactionsCount: fromAndToTransactions.toCount,
             tokens:  [getAddressTokenStats],
-            highestTransaction: highestTransaction,
+            highestTransaction: highest,
             lastTransactionTimestamp: lastTransactionTimestamp,
             createdOn: Date.now(),
             modifiedOn: Date.now(),
