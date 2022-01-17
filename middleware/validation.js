@@ -8,6 +8,14 @@ module.exports = {
       limit: yup.number().required()
     })
     await validate(schema, req.query, res, next)
+  },
+
+  validateBody: async (req, res, next) => {
+    const schema = yup.object().shape({
+      skip: yup.number().required(),
+      limit: yup.number().required()
+    })
+    await validate(schema, req.body, res, next)
   }
 
 }

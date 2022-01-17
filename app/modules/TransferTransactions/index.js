@@ -6,7 +6,7 @@ export default class Index {
 
   async getListOfTransferTransactionsForToken (request , response) {
     Utils.lhtLog('Inside getListOfTransferTransactionsForToken', request.params, 'getListOfTransferTransactionsForToken', 0, '')
-    const [error, getMetersRes] = await Utils.parseResponse(new BLManager().getListOfTransferTransactionsForToken({...request.params, ...request.query}))
+    const [error, getMetersRes] = await Utils.parseResponse(new BLManager().getListOfTransferTransactionsForToken({...request.params, ...request.body}))
     if (!getMetersRes) { return Utils.handleError(error, request, response) }
     return Utils.response(response, getMetersRes, apiSuccessMessage.FETCH_SUCCESS, httpConstants.RESPONSE_STATUS.SUCCESS, httpConstants.RESPONSE_CODES.OK)
   }

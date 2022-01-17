@@ -18,7 +18,7 @@ export default class Manger {
     }
     getListOfTransferTransactionsForToken = async (requestData) => {
         const txnListRequest = await this.getTransferListRequest(requestData);
-        return TransferModel.getTokenList(txnListRequest.requestData, {}, parseInt(txnListRequest.skip), parseInt(txnListRequest.limit), {timestamp: -1});
+        return TransferModel.getTokenList(txnListRequest.requestData, {}, parseInt(txnListRequest.skip), parseInt(txnListRequest.limit), txnListRequest.sorting ? txnListRequest.sorting : {timestamp: -1});
     }
 
     getTotalTransferTransactionForToken = async (requestData) => {
