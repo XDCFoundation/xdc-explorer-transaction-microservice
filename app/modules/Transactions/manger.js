@@ -70,7 +70,7 @@ export default class Manger {
     }
 
     getFiltersForAddressTxn = async (requestData) => {
-        const address = requestData.address
+        const address = requestData.address.toLowerCase();
         const [fromTransaction, toTransaction] = await Promise.all([
             TransactionModel.getTransactionList({from: address}, '', 0, 1, {blockNumber: -1}),
             TransactionModel.getTransactionList({to: address}, '', 0, 1, {blockNumber: -1})]);
@@ -85,7 +85,7 @@ export default class Manger {
 
     getFilteredTransactionsForAddress = async (requestData) => {
         if (!requestData) requestData = {}
-        const address = requestData.address
+        const address = requestData.address.toLowerCase()
         const txnType = requestData.txnType
         const startDate = requestData.startDate
         const endDate = requestData.endDate
@@ -137,7 +137,7 @@ export default class Manger {
 
     getTransactionsCountForAddress = async (requestData) => {
         if (!requestData) requestData = {}
-        const address = requestData.address
+        const address = requestData.address.toLowerCase()
         const txnType = requestData.txnType
         const startDate = requestData.startDate
         const endDate = requestData.endDate
