@@ -180,7 +180,7 @@ export default class Manger {
         if (!addressStatsResponse) {
             return await this.addressStatsDetails(addressHash, transactionTimestamp, fromAndToTransactions);
         }
-        return await this.addressStatsDetails(addressHash, transactionTimestamp,fromAndToTransactions);
+        return await this.addressStatsDetails(addressHash, transactionTimestamp, fromAndToTransactions);
     }
 
     async addressStatsDetails(addressHash, lastTransactionTimestamp, fromAndToTransactions) {
@@ -191,13 +191,13 @@ export default class Manger {
         Utils.lhtLog("BLManager:getAddressStats", "getAddressTokenStats", getAddressTokenStats, "");
         let toStats = await this.getAddressToStats(addressHash);
         let fromStats = await this.getAddressFromStats(addressHash);
-        Utils.lhtLog("BLManager:getAddressStats", "getAddressToStats ", toStats[0].avgTransactions.length, "");
-        Utils.lhtLog("BLManager:getAddressStats", "getAddressFromStats ", fromStats[0].avgTransactions.length, "");
+        Utils.lhtLog("BLManager:getAddressStats", "getAddressToStats ", toStats && toStats.length > 0 && toStats[0].avgTransactions.length, "");
+        Utils.lhtLog("BLManager:getAddressStats", "getAddressFromStats ", fromStats && fromStats.length > 0 && fromStats[0].avgTransactions.length, "");
 
-        let totalAverage = [...toStats[0].avgTransactions, ...fromStats[0].avgTransactions]
+        let totalAverage = [...(toStats && toStats.length > 0 &&toStats[0].avgTransactions ? toStats[0].avgTransactions:[]), ...(fromStats && fromStats.length > 0 && fromStats[0].avgTransactions? fromStats[0].avgTransactions:[])]
         totalAverage.sort((a, b) => a.timestamp > b.timestamp ? 1 : -1);
-       let highestAndAvgBalance= this.calculateBalance(totalAverage, addressDetails.balance)
-        let gasFee=  toStats[0].gasFee+fromStats[0].gasFee
+        let highestAndAvgBalance = this.calculateBalance(totalAverage, addressDetails.balance)
+        let gasFee =( toStats && toStats.length > 0 &&toStats[0].gasFee && toStats[0].gasFee) + (fromStats && fromStats.length >0 && fromStats[0].gasFee&& fromStats[0].gasFee);
 
         let reqObj = {
             address: addressHash,
@@ -236,7 +236,7 @@ export default class Manger {
         })
         let sum = avgBalance.reduce((a, b) => (a) + (b), 0);
         return {
-            avgBalance: sum / avgBalance.length,
+            avgBalance: Math.abs(sum) / avgBalance.length,
             highestTransaction: highest
         }
 
