@@ -66,6 +66,7 @@ export default class Manger {
             return responseStatus;
         }
         if (type === genericConstants.REQUEST_TYPE.ADDRESS) {
+            data=data.toLowerCase();
             const findObjToken = { "address": data, "ERC": { $gte: 2 }
             };
             const token = await TokenModel.find(findObjToken);
@@ -195,7 +196,7 @@ export default class Manger {
         let responseStatus = []
 
         const findObj = {
-            "address": data,
+            "address": data.toLowerCase(),
             "ERC": { $gte: 2 }
         };
         if (type === genericConstants.REQUEST_TYPE.ADDRESS) {
