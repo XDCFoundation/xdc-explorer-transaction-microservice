@@ -30,7 +30,7 @@ module.exports = (app) => {
      /**
      * Transfer Transaction definition
      */
-    app.get("/getListOfTransferTransactionsForToken/:contractAddress",ValidationManger.validateQuery,  new TransferTransactions().getListOfTransferTransactionsForToken);
+    app.post("/getListOfTransferTransactionsForToken/:contractAddress",ValidationManger.validateBody,  new TransferTransactions().getListOfTransferTransactionsForToken);
     app.get("/getTotalTransferTransactionForToken/:contractAddress",  new TransferTransactions().getTotalTransferTransactionForToken);
     app.get("/getTransferTransactionDetailsUsingHash/:hash",  new TransferTransactions().getTransferTransactionDetailsUsingHash);
 
