@@ -5,7 +5,7 @@ import {apiFailureMessage} from '../../common/constants';
 import AddressModel from "../../models/account";
 import AddressStatsModel from "../../models/addressStats";
 import TokenHolderModel from "../../models/tokenHolders";
-
+import Config from '../../../config';
 
 export default class Manger {
     getTransactionsForAddress = async (pathParameter, queryStringParameter) => {
@@ -167,38 +167,50 @@ export default class Manger {
         Utils.lhtLog("BLManager:getAddressStats", "addressStatsResponse", addressStatsResponse, "");
         let transactionTimestamp = await this.getAddressLastTransaction(addressHash);
         Utils.lhtLog("BLManager:getAddressStats", "addressLastTransactionTimestamp ", transactionTimestamp, "");
-        if (!addressStatsResponse) {
-            return await this.addressStatsDetails(addressHash, transactionTimestamp);
-        }
-        if (Number(addressStatsResponse.lastTransactionTimestamp) === Number(transactionTimestamp)) {
+        if (Number(addressStatsResponse && addressStatsResponse.lastTransactionTimestamp) === Number(transactionTimestamp)) {
             return addressStatsResponse;
         }
-        return await this.addressStatsDetails(addressHash, transactionTimestamp);
+
+        let fromAndToTransactions = await this.getAddressTransactionsCountStats(addressHash);
+
+        if (fromAndToTransactions.totalTransaction > Config.ADDRESS_STATS_TRANSACTION_COUNT) {
+            this.addressStatsDetails(addressHash, transactionTimestamp, fromAndToTransactions);
+            return "Address Stats Details calculation in process";
+        }
+        if (!addressStatsResponse) {
+            return await this.addressStatsDetails(addressHash, transactionTimestamp, fromAndToTransactions);
+        }
+        return await this.addressStatsDetails(addressHash, transactionTimestamp,fromAndToTransactions);
     }
 
-    async addressStatsDetails(addressHash, lastTransactionTimestamp) {
+    async addressStatsDetails(addressHash, lastTransactionTimestamp, fromAndToTransactions) {
         let addressDetails = await AddressModel.getAccount({address: addressHash});
-        Utils.lhtLog("BLManager:getAddressStats", "transactionCount started", "", "");
+
+        Utils.lhtLog("BLManager:getAddressStats", "transactionCount started", fromAndToTransactions, "");
         let getAddressTokenStats = await this.getAddressTokenStats(addressHash);
-        Utils.lhtLog("BLManager:getAddressStats", "averageBalance started", getAddressTokenStats, "");
-        let stats = await this.getAddressAllStats(addressHash);
-        let fromAndToTransactions = await this.getAddressTransactionsCountStats(addressHash);
-        // let highestTransaction = stats && stats.length > 0 ? stats[0].highestTransaction : 0;
-        Utils.lhtLog("BLManager:getAddressStats", "averageBalance started", getAddressTokenStats, "");
-        let highest=Math.max(...stats[0].avgTransactions);
-        let totalTransactionSum = stats && stats.length && stats[0].avgTransactions.reduce((a, b)=>Number(a)+Number(b),0);
+        Utils.lhtLog("BLManager:getAddressStats", "getAddressTokenStats", getAddressTokenStats, "");
+        let toStats = await this.getAddressToStats(addressHash);
+        let fromStats = await this.getAddressFromStats(addressHash);
+        Utils.lhtLog("BLManager:getAddressStats", "getAddressToStats ", toStats[0].avgTransactions.length, "");
+        Utils.lhtLog("BLManager:getAddressStats", "getAddressFromStats ", fromStats[0].avgTransactions.length, "");
+
+        let totalAverage = [...toStats[0].avgTransactions, ...fromStats[0].avgTransactions]
+        totalAverage.sort((a, b) => a.timestamp > b.timestamp ? 1 : -1);
+       let highestAndAvgBalance= this.calculateBalance(totalAverage, addressDetails.balance)
+        let gasFee=  toStats[0].gasFee+fromStats[0].gasFee
+
         let reqObj = {
             address: addressHash,
             accountType: addressDetails && addressDetails.accountType ? addressDetails.accountType : "",
             balance: addressDetails && addressDetails.balance ? addressDetails.balance : 0,
             timestamp: addressDetails && addressDetails.timestamp ? addressDetails.timestamp : 0,
-            avgBalance: totalTransactionSum / fromAndToTransactions.totalTransaction,
-            gasFee: stats && stats.length > 0 ? stats[0].gasFee : 0,
+            avgBalance: highestAndAvgBalance.avgBalance,
+            gasFee: gasFee,
             totalTransactionsCount: fromAndToTransactions.totalTransaction,
             fromTransactionsCount: fromAndToTransactions.fromCount,
             toTransactionsCount: fromAndToTransactions.toCount,
-            tokens:  [getAddressTokenStats],
-            highestTransaction: highest,
+            tokens: [getAddressTokenStats],
+            highestTransaction: highestAndAvgBalance.highestTransaction,
             lastTransactionTimestamp: lastTransactionTimestamp,
             createdOn: Date.now(),
             modifiedOn: Date.now(),
@@ -209,33 +221,80 @@ export default class Manger {
         return reqObj;
     }
 
+    calculateBalance(totalAverage, currentBalance) {
+        if (totalAverage.length <= 0)
+            return {};
+        let avgBalance = [];
+        let highest = Number(totalAverage[0].amount);
+        totalAverage.map((avg) => {
+            highest = highest > Number(avg.amount) ? highest : Number(avg.amount);
+            if (avg.action === "to")
+                currentBalance = currentBalance - Number(avg.amount);
+            else
+                currentBalance = currentBalance + Number(avg.amount);
+            avgBalance.push(currentBalance)
+        })
+        let sum = avgBalance.reduce((a, b) => (a) + (b), 0);
+        return {
+            avgBalance: sum / avgBalance.length,
+            highestTransaction: highest
+        }
+
+    }
+
     async getAddressLastTransaction(addressHash) {
         if (!addressHash)
             return {};
-        let fromDetails = await TransactionModel.getTransactionList({from: addressHash}, {timestamp: 1,blockNumber:1}, 0, 1, {blockNumber: -1});
-        let toDetails = await TransactionModel.getTransactionList({to: addressHash}, {timestamp: 1,blockNumber:1}, 0, 1, {blockNumber: -1});
-        let fromTimestamp=fromDetails && fromDetails.length>0?fromDetails[0].timestamp:0;
-        let toTimestamp=toDetails && toDetails.length>0?toDetails[0].timestamp:0;
+        let fromDetails = await TransactionModel.getTransactionList({from: addressHash}, {
+            timestamp: 1,
+            blockNumber: 1
+        }, 0, 1, {blockNumber: -1});
+        let toDetails = await TransactionModel.getTransactionList({to: addressHash}, {
+            timestamp: 1,
+            blockNumber: 1
+        }, 0, 1, {blockNumber: -1});
+        let fromTimestamp = fromDetails && fromDetails.length > 0 ? fromDetails[0].timestamp : 0;
+        let toTimestamp = toDetails && toDetails.length > 0 ? toDetails[0].timestamp : 0;
         return fromTimestamp > toTimestamp ? fromTimestamp : toTimestamp;
     }
 
 
-    async getAddressAllStats(address) {
+    async getAddressToStats(address) {
         if (!address)
             return {};
         return TransactionModel.aggregate(
             [
                 {
                     $match: {
-                        $or: [{from: address}, {to: address}]
+                        to: address
                     }
                 },
                 {
                     $group: {
                         _id: null,
                         gasFee: {$sum: "$gasUsed"},
-                        highestTransaction: {$max: "$value"},
-                        avgTransactions: {$push: "$value"}
+                        avgTransactions: {$push: {"amount": "$value", "action": "to", "timestamp": "$timestamp"}}
+                    }
+                }
+            ]
+        );
+    }
+
+    async getAddressFromStats(address) {
+        if (!address)
+            return {};
+        return TransactionModel.aggregate(
+            [
+                {
+                    $match: {
+                        from: address
+                    }
+                },
+                {
+                    $group: {
+                        _id: null,
+                        gasFee: {$sum: "$gasUsed"},
+                        avgTransactions: {$push: {"amount": "$value", "action": "from", "timestamp": "$timestamp"}}
                     }
                 }
             ]
