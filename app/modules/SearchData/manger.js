@@ -66,6 +66,13 @@ export default class Manger {
             return responseStatus;
         }
         if (type === genericConstants.REQUEST_TYPE.ADDRESS) {
+            const findObjToken = { "address": data, "ERC": { $gte: 2 }
+            };
+            const token = await TokenModel.find(findObjToken);
+            if (token) {
+                responseStatus.push({ 'redirect': 'token', token })
+                return responseStatus;
+            }
            responseStatus = await this.searchAddress(data)
             return responseStatus;
         }
