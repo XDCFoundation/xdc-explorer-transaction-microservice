@@ -78,7 +78,7 @@ export default class Manger {
             return responseStatus;
         }
         if (!type) {
-            const findObjToken = { "tokenName": data, "ERC": { $gte: 2 }
+            const findObjToken = {$or:[{tokenName:{$regex:".*"+data+".*",$options:"i"}},{symbol:{$regex:".*"+data+".*",$options:"i"}}] ,"ERC": { $gte: 2 }
          };
             const token = await TokenModel.find(findObjToken);
             if (token) {
@@ -195,14 +195,15 @@ export default class Manger {
     searchTokens = async (data, type) => {
         let responseStatus = []
 
-        const findObj = {
-            "address": data.toLowerCase(),
-            "ERC": { $gte: 2 }
-        };
         if (type === genericConstants.REQUEST_TYPE.ADDRESS) {
+            const findObj = {
+                "address": data.toLowerCase(),
+                "ERC": { $gte: 2 }
+            };
             let token = await TokenModel.findOne(findObj);
             if (token) {
-                responseStatus.push({ 'redirect': 'token', token })
+                 responseStatus.push({ 'redirect': 'token', token });
+                 return responseStatus;
             }
             token = await this.getTokenDataFromSocket(data)
             if(token)
@@ -211,7 +212,7 @@ export default class Manger {
 
         }
         else {
-            let findObjToken = { "tokenName": data, "ERC": { $gte: 2 } };
+            const findObjToken = {$or:[{tokenName:{$regex:".*"+data+".*",$options:"i"}},{symbol:{$regex:".*"+data+".*",$options:"i"}}] ,"ERC": { $gte: 2 }}
             let token = await TokenModel.findOne(findObjToken);
             if (token) {
                 responseStatus.push({ 'redirect': 'token', token })
