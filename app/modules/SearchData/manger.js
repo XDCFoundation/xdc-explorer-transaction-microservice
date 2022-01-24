@@ -257,7 +257,10 @@ export default class Manger {
     getTransactionDataFromSocket = async (data) => {
         try {
             let rabbitMqController = new RabbitMqController();
+
             const transaction = await web3.eth.getTransactionReceipt(data);
+            const transactionDetails = await web3.eth.getTransaction(data);
+
             let transactionObj = {
                 blockHash: transaction.blockHash,
                 blockNumber: transaction.blockNumber,
@@ -270,21 +273,20 @@ export default class Manger {
                 cumulativeGasUsed: transaction.cumulativeGasUsed,
                 logs: transaction.logs,
                 status: transaction.status,
-                gas:  0,
-                gasPrice: 0,
-                input:  "",
-                nonce: 0,
-                value: "",
-                r:  "",
-                s: "",
-                v: "",
+                gas:  transactionDetails.gas,
+                gasPrice: transactionDetails.gasPrice,
+                input:  transactionDetails.input,
+                nonce: transactionDetails.nonce,
+                value: transactionDetails.value,
+                r:  transactionDetails.r,
+                s: transactionDetails.s,
+                v: transactionDetails.v,
                 timestamp:  0,
                 modifiedOn:Date.now(),
                 createdOn: Date.now(),
                 isDeleted: false,
                 isActive: true
             }
-
             rabbitMqController.insertInQueue(Config.SYNC_TRANSACTION_EXCHANGE, Config.SYNC_TRANSACTION_QUEUE, "", "", "", "", "", amqpConstants.exchangeType.FANOUT, amqpConstants.queueType.PUBLISHER_SUBSCRIBER_QUEUE, JSON.stringify([transactionObj]));
             return transactionObj;
         }
