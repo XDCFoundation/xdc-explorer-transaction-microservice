@@ -116,8 +116,12 @@ export default class Manger {
 
     getCoinMarketDetailForTransaction= async(req)=>{
         Utils.lhtLog("BLManager:getCoinMarketDetailForTransaction", "get  getCoinMarketDetailForTransaction ", "", "");
-        return await CoinMasterModel.getCoinMarketCapList({lastUpdated:{$lte:parseInt(req.transactionTime)},fiatValue:req.fiatValue},
+        let coinMarketResponse= await CoinMasterModel.getCoinMarketCapList({lastUpdated:{$lte:parseInt(req.transactionTime)},fiatValue:req.fiatValue},
             "", 0, 1, { lastUpdated: -1 });
+        if(!coinMarketResponse || coinMarketResponse.length<=0)
+            coinMarketResponse= await CoinMasterModel.getCoinMarketCapList({lastUpdated:{$gte:parseInt(req.transactionTime)},fiatValue:req.fiatValue},
+                "", 0, 1, { lastUpdated: 1 });
+        return coinMarketResponse;
     }
       
 }

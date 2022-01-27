@@ -194,10 +194,10 @@ export default class Manger {
         Utils.lhtLog("BLManager:getAddressStats", "getAddressToStats ", toStats && toStats.length > 0 && toStats[0].avgTransactions.length, "");
         Utils.lhtLog("BLManager:getAddressStats", "getAddressFromStats ", fromStats && fromStats.length > 0 && fromStats[0].avgTransactions.length, "");
 
-        let totalAverage = [...(toStats && toStats.length > 0 &&toStats[0].avgTransactions ? toStats[0].avgTransactions:[]), ...(fromStats && fromStats.length > 0 && fromStats[0].avgTransactions? fromStats[0].avgTransactions:[])]
+        let totalAverage = [...(toStats && toStats.length > 0 && toStats[0].avgTransactions ? toStats[0].avgTransactions : []), ...(fromStats && fromStats.length > 0 && fromStats[0].avgTransactions ? fromStats[0].avgTransactions : [])]
         totalAverage.sort((a, b) => a.timestamp > b.timestamp ? -1 : 1);
         let highestAndAvgBalance = this.calculateBalance(totalAverage, addressDetails.balance)
-        let gasFee =( toStats && toStats.length > 0 &&toStats[0].gasFee && toStats[0].gasFee) + (fromStats && fromStats.length >0 && fromStats[0].gasFee&& fromStats[0].gasFee);
+        let gasFee = (toStats && toStats.length > 0 && toStats[0].gasFee && toStats[0].gasFee) + (fromStats && fromStats.length > 0 && fromStats[0].gasFee && fromStats[0].gasFee);
 
         let reqObj = {
             address: addressHash,
