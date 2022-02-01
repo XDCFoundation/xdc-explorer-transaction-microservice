@@ -26,17 +26,16 @@ export default class Manger {
         Utils.lhtLog("BLManager:getCoinMarketExchangeForToken", "get  getCoinMarketExchangeForToken ", "", "");
         let symbol = requestData.symbol.toUpperCase()
         const URL = `${Config.COIN_MARKET_API_URL}?symbol=${symbol}&CMC_PRO_API_KEY=${Config.CMC_API_KEY}`;
-        const responseUSD = await executeHTTPRequest(httpConstants.METHOD_TYPE.GET, URL , {} , {});
-       
+        let responseUSD = JSON.parse(await executeHTTPRequest(httpConstants.METHOD_TYPE.GET, URL , "", {}));
         if (responseUSD.status.error_message !== null || responseUSD.status.error_message === 400)
             return { requestData: {}, message: responseUSD.status.error_message, sucess: false, responseCode: responseUSD.status.error_code }
 
-        const responseINR = await executeHTTPRequest(httpConstants.METHOD_TYPE.GET, URL + "&convert=INR", {}, {});
+        const responseINR = JSON.parse(await executeHTTPRequest(httpConstants.METHOD_TYPE.GET, URL + "&convert=INR", "", {}));
 
         if (responseINR.status.error_message !== null || responseINR.status.error_message === 400)
         return { requestData: {}, message: responseINR.status.error_message, sucess: false, responseCode: responseINR.status.error_code }
 
-        const responseEUR = await executeHTTPRequest(httpConstants.METHOD_TYPE.GET, URL + "&convert=EUR", {}, {});
+        const responseEUR = JSON.parse(await executeHTTPRequest(httpConstants.METHOD_TYPE.GET, URL + "&convert=EUR", "", {}));
 
         if (responseEUR.status.error_message !== null || responseEUR.status.error_message === 400)
         return { requestData: {}, message: responseEUR.status.error_message, sucess: false, responseCode: responseEUR.status.error_code }
