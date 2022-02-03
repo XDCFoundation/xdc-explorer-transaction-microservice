@@ -114,11 +114,11 @@ export default class Manger {
             return txnType === 'IN' ? toTransaction : fromTransaction;
 
         responseTransactions = [...fromTransaction, ...toTransaction]
-        try{
-         this.syncTransactionsFromCoinMarketAPI(address);}
-        catch(err){
-            console.log("syncTransactionsFromCoinMarketAPI catch",err);
-        }
+        // try{
+        //  // this.syncTransactionsFromCoinMarketAPI(address);}
+        // catch(err){
+        //     console.log("syncTransactionsFromCoinMarketAPI catch",err);
+        // }
 
         responseTransactions.sort((transaction1, transaction2) => {
             if (sortType === 1)
