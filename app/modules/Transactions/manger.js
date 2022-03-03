@@ -1,11 +1,14 @@
 import Utils from '../../utils'
 import TransactionModel from "../../models/transaction";
 import TransactionHistoryModel from "../../models/historical";
-import {apiFailureMessage} from '../../common/constants';
+import {amqpConstants, apiFailureMessage, httpConstants} from '../../common/constants';
 import AddressModel from "../../models/account";
 import AddressStatsModel from "../../models/addressStats";
 import TokenHolderModel from "../../models/tokenHolders";
 import Config from '../../../config';
+import HttpService from "../../service/http-service";
+import moment from "moment";
+import RabbitMqController from "../queue/index";
 
 export default class Manger {
     getTransactionsForAddress = async (pathParameter, queryStringParameter) => {
@@ -99,7 +102,6 @@ export default class Manger {
         delete txnListRequest.requestData.txnType
         delete txnListRequest.requestData.startDate
         delete txnListRequest.requestData.endDate
-
         if (startDate && endDate)
             txnListRequest.requestData.timestamp = {$gte: startDate / 1000, $lte: endDate / 1000}
         const [fromTransaction, toTransaction] = await Promise.all([TransactionModel.getTransactionList({
@@ -112,6 +114,12 @@ export default class Manger {
             return txnType === 'IN' ? toTransaction : fromTransaction;
 
         responseTransactions = [...fromTransaction, ...toTransaction]
+        // try{
+        //  // this.syncTransactionsFromCoinMarketAPI(address);}
+        // catch(err){
+        //     console.log("syncTransactionsFromCoinMarketAPI catch",err);
+        // }
+
         responseTransactions.sort((transaction1, transaction2) => {
             if (sortType === 1)
                 return (transaction1[sortKey] - transaction2[sortKey])
@@ -123,12 +131,69 @@ export default class Manger {
     };
 
 
+    syncTransactionsFromCoinMarketAPI=async(address)=>{
+        const [fromCount, toCount] = await Promise.all([
+            TransactionModel.countDocuments({ from: address}),
+            TransactionModel.countDocuments({to: address})]);
+
+        let totalTransactions=fromCount+toCount;
+        let URL="https://xdc.blocksscan.io/api/txs/listByAccount/"+address+"?page=1&limit=100&tx_type=all";
+        const response = JSON.parse(await HttpService.executeHTTPRequest(httpConstants.METHOD_TYPE.GET, URL, "", {}, {}));
+        let totalTransactionsFromBlockScan=response.total;
+        let totalPages=response.pages;
+        if(totalTransactions >= totalTransactionsFromBlockScan)
+            return;
+        await this.syncTransactionsBasedOnPage(address,totalPages);
+    }
+
+    syncTransactionsBasedOnPage=async(address,pages)=>{
+        for(let index=1;index<=pages;index++){
+            let URL="https://xdc.blocksscan.io/api/txs/listByAccount/"+address+"?page="+index+"&limit=100&tx_type=all";
+            const response = JSON.parse(await HttpService.executeHTTPRequest(httpConstants.METHOD_TYPE.GET, URL, "", {}, {}));
+           let queueData=response.items && response.items.map((transaction)=>{
+               return this.parseTransaction(transaction);
+           })
+            let rabbitMqController = new RabbitMqController();
+            await rabbitMqController.insertInQueue(Config.SYNC_TRANSACTION_EXCHANGE, Config.SYNC_TRANSACTION_QUEUE, "", "", "", "", "", amqpConstants.exchangeType.FANOUT, amqpConstants.queueType.PUBLISHER_SUBSCRIBER_QUEUE, JSON.stringify(queueData));
+        }
+    }
+
+    parseTransaction(txDetail){
+        const tx={
+            blockHash: txDetail.blockHash || "",
+            blockNumber: txDetail.blockNumber || 0,
+            hash: txDetail.hash.toLowerCase() || "",
+            from: txDetail.from.toLowerCase() || "",
+            to: txDetail.to || "",
+            gas: txDetail.gas || "",
+            gasPrice: String(txDetail.gasPrice) || "",
+            gasUsed: txDetail.gasUsed || 0,
+            input: txDetail.input || "",
+            nonce: txDetail.nonce || 0,
+            transactionIndex: txDetail.transactionIndex || 0,
+            value: txDetail.value || "",
+            cumulativeGasUsed: txDetail.cumulativeGasUsed || 0,
+            status: txDetail.status || false,
+            timestamp: (moment(txDetail.timestamp).valueOf()/1000) || 0,
+            modifiedOn: Date.now(),
+            createdOn: Date.now(),
+            isDeleted: false,
+            isActive: true,
+        }
+        return tx;
+    }
+
+
     getLatestTransactions = async (req) => {
         Utils.lhtLog("BLManager:getLatestTransactions", "get getLatestTransactions count " + req, "", "");
         let skip = parseInt(req.skip ? req.skip : 0);
         let limit = parseInt(req.limit ? req.limit : 10);
+<<<<<<< HEAD
         let sortKey = parseInt(req.sortKey ? req.sortKey : -1);
         return await TransactionModel.getTransactionList({value: {$gte: 0}}, {}, skip, limit, {blockNumber: Number(sortKey)});
+=======
+        return await TransactionModel.getTransactionList({}, {}, skip, limit, {blockNumber: -1});
+>>>>>>> 61623ba48539959d633626452448fb167608442e
 
     }
     getTotalTransactions = async () => {
