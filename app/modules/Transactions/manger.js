@@ -188,7 +188,8 @@ export default class Manger {
         Utils.lhtLog("BLManager:getLatestTransactions", "get getLatestTransactions count " + req, "", "");
         let skip = parseInt(req.skip ? req.skip : 0);
         let limit = parseInt(req.limit ? req.limit : 10);
-        return await TransactionModel.getTransactionList({}, {}, skip, limit, {blockNumber: -1});
+        let sortKey = parseInt(req.sortKey ? req.sortKey : -1);
+        return await TransactionModel.getTransactionList({value: {$gte: 0}}, {}, skip, limit, {blockNumber: Number(sortKey)});
 
     }
     getTotalTransactions = async () => {
