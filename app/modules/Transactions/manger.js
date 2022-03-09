@@ -5,12 +5,17 @@ import {amqpConstants, apiFailureMessage, httpConstants} from '../../common/cons
 import AddressModel from "../../models/account";
 import AddressStatsModel from "../../models/addressStats";
 import TokenHolderModel from "../../models/tokenHolders";
+import NetworkDetailModel from '../../models/networkDetails';
 import Config from '../../../config';
 import HttpService from "../../service/http-service";
 import moment from "moment";
 import RabbitMqController from "../queue/index";
 
 export default class Manger {
+    getNetworkDetails = async () => {
+        Utils.lhtLog("BLManager:getNetworkDetails", "get getNetworkDetails ", "", "");
+        return await NetworkDetailModel.getNetworkDetails();
+    }
     getTransactionsForAddress = async (pathParameter, queryStringParameter) => {
 
         Utils.lhtLog("BLManager:getAccountDetailsUsingAddress", "getAccountDetailsUsingAddress started", "", "");
