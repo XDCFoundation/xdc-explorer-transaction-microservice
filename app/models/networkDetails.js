@@ -9,6 +9,8 @@ const NetworkSchema = new Schema({
   modifiedOn: { type: Number, default: Date.now() },
   currencySymbol: { type: String, default: "" },
   networkName: { type: String, default: "" },
+  isDeleted: {type: Boolean, default: false},
+    isActive: {type: Boolean, default: true},
 });
 
 NetworkSchema.method({
@@ -17,8 +19,8 @@ NetworkSchema.method({
   },
 });
 NetworkSchema.static({
-  getNetworkDetails: function () {
-    return this.find({});
+  getNetworkDetails: function (findObj) {
+    return this.find(findObj);
   },
 });
 module.exports = mongoose.model("xin-networkdetail", NetworkSchema);

@@ -13,8 +13,11 @@ import RabbitMqController from "../queue/index";
 
 export default class Manger {
     getNetworkDetails = async () => {
+        const findObj = {
+            "isActive": true
+        };
         Utils.lhtLog("BLManager:getNetworkDetails", "get getNetworkDetails ", "", "");
-        return await NetworkDetailModel.getNetworkDetails();
+        return await NetworkDetailModel.getNetworkDetails(findObj);
     }
     getTransactionsForAddress = async (pathParameter, queryStringParameter) => {
 
