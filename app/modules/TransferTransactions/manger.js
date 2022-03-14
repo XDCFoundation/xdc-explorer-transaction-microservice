@@ -20,6 +20,25 @@ export default class Manger {
         const txnListRequest = await this.getTransferListRequest(requestData);
         return TransferModel.getTokenList(txnListRequest.requestData, {}, parseInt(txnListRequest.skip), parseInt(txnListRequest.limit), txnListRequest.sorting ? txnListRequest.sorting : {timestamp: -1});
     }
+    getTokenTransactions = async (req) => {
+        const findObj = {
+            "to": req.address
+        };
+        Utils.lhtLog("BLManager:getTokenTransactions", "get getTokenTransactions list " + req, "", "");
+        let skip = parseInt(req.skip ? req.skip : 0);
+        let limit = parseInt(req.limit ? req.limit : 10);
+        let responseCount = await TransactionModel.countData(findObj)
+        console.log(req.sortKey)
+        let response = await TransactionModel.getTransactionList(
+            findObj,
+            {},
+            skip,
+            limit,
+            req.sortKey ? req.sortKey : { blockNumber: -1 }
+          );
+       return {response:response,count:responseCount}
+         
+    }
 
     getTotalTransferTransactionForToken = async (requestData) => {
         const txnListRequest = await this.getTransferListRequest(requestData);
