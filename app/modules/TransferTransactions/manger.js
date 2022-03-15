@@ -22,7 +22,10 @@ export default class Manger {
     }
     getTokenTransactions = async (req) => {
         const findObj = {
-            "to": req.address
+        $or: [
+          { to:   req.address },
+          { from:   req.address  },
+        ],
         };
         Utils.lhtLog("BLManager:getTokenTransactions", "get getTokenTransactions list " + req, "", "");
         let skip = parseInt(req.skip ? req.skip : 0);
