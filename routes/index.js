@@ -34,7 +34,7 @@ module.exports = (app) => {
     app.post("/getListOfTransferTransactionsForToken/:contractAddress",ValidationManger.validateBody,  new TransferTransactions().getListOfTransferTransactionsForToken);
     app.get("/getTotalTransferTransactionForToken/:contractAddress",  new TransferTransactions().getTotalTransferTransactionForToken);
     app.get("/getTransferTransactionDetailsUsingHash/:hash",  new TransferTransactions().getTransferTransactionDetailsUsingHash);
-
+    app.post("/getTokenTransactions/:address",  new TransferTransactions().getTokenTransactions);
 
      /**
      * Coin Market Exchange definition
