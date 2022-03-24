@@ -13,34 +13,60 @@ export default class Manger {
         delete requestData.startDate;
         const txnListRequest = this.parseGetTxnListRequest(requestData);
         if (startDate)
-            txnListRequest.requestData.timestamp = {$gte: startDate / 1000, $lte: new Date().getTime() / 1000}
+            txnListRequest.requestData.timestamp = { $gte: startDate / 1000, $lte: new Date().getTime() / 1000 }
         return txnListRequest
     }
     getListOfTransferTransactionsForToken = async (requestData) => {
         const txnListRequest = await this.getTransferListRequest(requestData);
-        return TransferModel.getTokenList(txnListRequest.requestData, {}, parseInt(txnListRequest.skip), parseInt(txnListRequest.limit), txnListRequest.sorting ? txnListRequest.sorting : {timestamp: -1});
+        return TransferModel.getTokenList(txnListRequest.requestData, {}, parseInt(txnListRequest.skip), parseInt(txnListRequest.limit), txnListRequest.sorting ? txnListRequest.sorting : { timestamp: -1 });
     }
     getTokenTransactions = async (req) => {
         const findObj = {
-        $or: [
-          { to:   req.address },
-          { from:   req.address  },
-        ],
+            $or: [
+                { to: req.address },
+                { from: req.address },
+            ],
         };
         Utils.lhtLog("BLManager:getTokenTransactions", "get getTokenTransactions list " + req, "", "");
         let skip = parseInt(req.skip ? req.skip : 0);
         let limit = parseInt(req.limit ? req.limit : 10);
         let responseCount = await TransactionModel.countData(findObj)
-        console.log(req.sortKey)
+        if (req.sortKey.blockNumber == 1) {
+            let arrayList = [];
+            const [toTransactions, fromTransactions] = await Promise.all([
+                TransactionModel.getTransactionList(
+                    { to: req.address },
+                    {},
+                    skip,
+                    limit,
+                    { blockNumber: 1 }
+                ),
+                TransactionModel.getTransactionList(
+                    { from: req.address },
+                    {},
+                    skip,
+                    limit,
+                    { blockNumber: 1 }
+                )
+            ]);
+            arrayList.push(toTransactions, fromTransactions)
+            let newArray = arrayList.flat()
+            newArray.sort((a, b) => {
+                a.blockNumber - b.blockNumber
+            })
+            let responseToSend = newArray.slice(0,limit)
+            return { response: responseToSend, count: responseCount }
+        }
+        console.log("HIIIIIIIII")
         let response = await TransactionModel.getTransactionList(
             findObj,
             {},
             skip,
             limit,
             req.sortKey ? req.sortKey : { blockNumber: -1 }
-          );
-       return {response:response,count:responseCount}
-         
+        );
+        return { response: response, count: responseCount }
+
     }
 
     getTotalTransferTransactionForToken = async (requestData) => {
@@ -48,58 +74,58 @@ export default class Manger {
         return TransferModel.countDocuments(txnListRequest.requestData);
     }
 
-    getTransferTransactionDetailsUsingHash= async(pathParameters)=>{
+    getTransferTransactionDetailsUsingHash = async (pathParameters) => {
         Utils.lhtLog("BLManager:getTotalTransferTransactionForToken", "get total of TokenTransfer count", "", "");
-        let transactionHash=pathParameters.hash.toLowerCase();
-        let response={};
-        let transferToken= await TransferModel.getToken( {hash:transactionHash});
-        const transaction = await TransactionModel.getTransaction({hash: transactionHash});
-        const contract = await ContractModel.getContractList({address: transferToken.contract},{decimals:1,symbol:1,tokenName:1,totalSupply:1},0,1,"");
-        if (!transaction){
-            response={
-                hash:transferToken.hash,
+        let transactionHash = pathParameters.hash.toLowerCase();
+        let response = {};
+        let transferToken = await TransferModel.getToken({ hash: transactionHash });
+        const transaction = await TransactionModel.getTransaction({ hash: transactionHash });
+        const contract = await ContractModel.getContractList({ address: transferToken.contract }, { decimals: 1, symbol: 1, tokenName: 1, totalSupply: 1 }, 0, 1, "");
+        if (!transaction) {
+            response = {
+                hash: transferToken.hash,
                 blockNumber: transferToken.blockNumber,
                 method: transferToken.method,
                 from: transferToken.from,
                 to: transferToken.to,
                 contract: transferToken.contract,
-                value:transferToken.value,
+                value: transferToken.value,
                 timestamp: transferToken.timestamp,
-                decimals:contract&&contract[0]&&contract[0].decimals?contract[0].decimals:0,
-                symbol:contract&&contract[0]&&contract[0].symbol?contract[0].symbol:"",
-                tokenName:contract&&contract[0]&&contract[0].tokenName?contract[0].tokenName:"",
-                totalSupply:contract&&contract[0]&&contract[0].totalSupply?contract[0].totalSupply:0,
-                nonce:0,
-                gasUsed:0,
-                gasPrice:0,
-                gas:0,
-                transactionValue:0,
-                input:"",
-                status:false
+                decimals: contract && contract[0] && contract[0].decimals ? contract[0].decimals : 0,
+                symbol: contract && contract[0] && contract[0].symbol ? contract[0].symbol : "",
+                tokenName: contract && contract[0] && contract[0].tokenName ? contract[0].tokenName : "",
+                totalSupply: contract && contract[0] && contract[0].totalSupply ? contract[0].totalSupply : 0,
+                nonce: 0,
+                gasUsed: 0,
+                gasPrice: 0,
+                gas: 0,
+                transactionValue: 0,
+                input: "",
+                status: false
             }
             return response;
         }
 
-        response={
-            hash:transferToken.hash,
+        response = {
+            hash: transferToken.hash,
             blockNumber: transferToken.blockNumber,
             method: transferToken.method,
             from: transferToken.from,
             to: transferToken.to,
             contract: transferToken.contract,
-            value:transferToken.value,
+            value: transferToken.value,
             timestamp: transferToken.timestamp,
-            nonce:transaction.nonce,
-            gasUsed:transaction.gasUsed,
-            gasPrice:transaction.gasPrice,
-            gas:transaction.gas,
-            transactionValue:transaction.value,
-            input:transaction.input,
-            decimals:contract&&contract[0]&&contract[0].decimals?contract[0].decimals:0,
-            symbol:contract&&contract[0]&&contract[0].symbol?contract[0].symbol:"",
-            tokenName:contract&&contract[0]&&contract[0].tokenName?contract[0].tokenName:"",
-            totalSupply:contract&&contract[0]&&contract[0].totalSupply?contract[0].totalSupply:0,
-            status:transaction.status
+            nonce: transaction.nonce,
+            gasUsed: transaction.gasUsed,
+            gasPrice: transaction.gasPrice,
+            gas: transaction.gas,
+            transactionValue: transaction.value,
+            input: transaction.input,
+            decimals: contract && contract[0] && contract[0].decimals ? contract[0].decimals : 0,
+            symbol: contract && contract[0] && contract[0].symbol ? contract[0].symbol : "",
+            tokenName: contract && contract[0] && contract[0].tokenName ? contract[0].tokenName : "",
+            totalSupply: contract && contract[0] && contract[0].totalSupply ? contract[0].totalSupply : 0,
+            status: transaction.status
         }
         return response;
 
@@ -119,7 +145,7 @@ export default class Manger {
         }
         let sorting = '';
         if (requestObj.sortKey) {
-            sorting = {[requestObj.sortKey]: requestObj.sortType || -1};
+            sorting = { [requestObj.sortKey]: requestObj.sortType || -1 };
             delete requestObj.sortKey;
             delete requestObj.sortType;
         }
@@ -131,8 +157,8 @@ export default class Manger {
         let searchQuery = [];
         if (requestObj.searchKeys && requestObj.searchValue && Array.isArray(requestObj.searchKeys) && requestObj.searchKeys.length) {
             requestObj.searchKeys.map((searchKey) => {
-                let searchRegex = {"$regex": requestObj.searchValue, "$options": "i"};
-                searchQuery.push({[searchKey]: searchRegex});
+                let searchRegex = { "$regex": requestObj.searchValue, "$options": "i" };
+                searchQuery.push({ [searchKey]: searchRegex });
             });
             requestObj["$or"] = searchQuery;
         }
@@ -140,6 +166,6 @@ export default class Manger {
             delete requestObj.searchKeys;
         if (requestObj.searchValue)
             delete requestObj.searchValue;
-        return {requestData: requestObj, skip, limit, sorting, selectionKeys};
+        return { requestData: requestObj, skip, limit, sorting, selectionKeys };
     }
 }
