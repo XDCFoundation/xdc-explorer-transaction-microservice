@@ -57,7 +57,6 @@ export default class Manger {
             let responseToSend = newArray.slice(0,limit)
             return { response: responseToSend, count: responseCount }
         }
-        console.log("HIIIIIIIII")
         let response = await TransactionModel.getTransactionList(
             findObj,
             {},
