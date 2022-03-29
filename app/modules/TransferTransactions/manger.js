@@ -21,50 +21,43 @@ export default class Manger {
         return TransferModel.getTokenList(txnListRequest.requestData, {}, parseInt(txnListRequest.skip), parseInt(txnListRequest.limit), txnListRequest.sorting ? txnListRequest.sorting : { timestamp: -1 });
     }
     getTokenTransactions = async (req) => {
-        const findObj = {
-            $or: [
-                { to: req.address },
-                { from: req.address },
-            ],
-        };
         Utils.lhtLog("BLManager:getTokenTransactions", "get getTokenTransactions list " + req, "", "");
         let skip = parseInt(req.skip ? req.skip : 0);
         let limit = parseInt(req.limit ? req.limit : 10);
-        let responseCount = await TransactionModel.countData(findObj)
-        if (req.sortKey.blockNumber == 1) {
-            let arrayList = [];
-            const [toTransactions, fromTransactions] = await Promise.all([
-                TransactionModel.getTransactionList(
-                    { to: req.address },
-                    {},
-                    skip,
-                    limit,
-                    { blockNumber: 1 }
-                ),
-                TransactionModel.getTransactionList(
-                    { from: req.address },
-                    {},
-                    skip,
-                    limit,
-                    { blockNumber: 1 }
-                )
-            ]);
-            arrayList.push(toTransactions, fromTransactions)
-            let newArray = arrayList.flat()
+        let arrayList = [];
+        const [toTransactions, fromTransactions] = await Promise.all([
+            TransactionModel.getTransactionList(
+                { to: req.address },
+                {},
+                skip,
+                limit,
+                req.sortKey ? req.sortKey : { blockNumber: -1 }
+            ),
+            TransactionModel.getTransactionList(
+                { from: req.address },
+                {},
+                skip,
+                limit,
+                req.sortKey ? req.sortKey : { blockNumber: -1 }
+            )
+        ]);
+        let toTransactionsCount = await TransactionModel.countData({ to: req.address })
+        let fromTransactionCount = await TransactionModel.countData({ from: req.address })
+        let responseCount = toTransactionsCount + fromTransactionCount
+        arrayList.push(toTransactions, fromTransactions)
+        let newArray = [...toTransactions, ...fromTransactions]
+        var firstKey = Object.keys(req.sortKey)[0];
+        if (req.sortKey[firstKey] == 1) {
             newArray.sort((a, b) => {
-                a.blockNumber - b.blockNumber
+                a[firstKey] - b[firstKey]
             })
-            let responseToSend = newArray.slice(0,limit)
-            return { response: responseToSend, count: responseCount }
+        } else {
+            newArray.sort((a, b) => {
+                b[firstKey] - a[firstKey]
+            })
         }
-        let response = await TransactionModel.getTransactionList(
-            findObj,
-            {},
-            skip,
-            limit,
-            req.sortKey ? req.sortKey : { blockNumber: -1 }
-        );
-        return { response: response, count: responseCount }
+        let responseToSend = newArray.slice(0, limit)
+        return { response: responseToSend, count: responseCount }
 
     }
 
