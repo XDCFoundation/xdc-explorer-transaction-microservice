@@ -212,7 +212,7 @@ export default class Manger {
         const startDate = requestData.startDate
         const endDate = requestData.endDate
         if (requestData.searchValue)
-            requestData.searchKeys = ["hash", "from", "to"]
+            requestData.searchKeys = ["hash", "from", "to","blockNumber"]
 
         const txnListRequest = this.parseGetTxnListRequest(requestData);
         delete txnListRequest.requestData.address
@@ -456,7 +456,10 @@ export default class Manger {
         let searchQuery = [];
         if (requestObj.searchKeys && requestObj.searchValue && Array.isArray(requestObj.searchKeys) && requestObj.searchKeys.length) {
             requestObj.searchKeys.map((searchKey) => {
-                let searchRegex = {"$regex": requestObj.searchValue, "$options": "i"};
+                let searchRegex = {"$regex": requestObj.searchValue, "$options": "i"}
+                if(searchKey==="blockNumber" &&  !isNaN(Number(requestObj.searchValue))){
+                    searchRegex = Number(requestObj.searchValue)  
+                }
                 searchQuery.push({[searchKey]: searchRegex});
             });
             requestObj["$or"] = searchQuery;
