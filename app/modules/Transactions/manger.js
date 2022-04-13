@@ -1,7 +1,7 @@
 import Utils from '../../utils'
 import TransactionModel from "../../models/transaction";
 import TransactionHistoryModel from "../../models/historical";
-import {amqpConstants, apiFailureMessage, httpConstants} from '../../common/constants';
+import { amqpConstants, apiFailureMessage, httpConstants } from '../../common/constants';
 import AddressModel from "../../models/account";
 import AddressStatsModel from "../../models/addressStats";
 import TokenHolderModel from "../../models/tokenHolders";
@@ -49,23 +49,23 @@ export default class Manger {
                 {
                     $and: [{
                         to: address
-                    }, {hash: {$regex: ".*" + keyword + ".*", $options: 'i'}}]
+                    }, { hash: { $regex: ".*" + keyword + ".*", $options: 'i' } }]
                 }, "", skip, limit, {});
             let fromTransaction = await TransactionModel.getTransactionList(
                 {
                     $and: [{
                         from: address
-                    }, {hash: {$regex: ".*" + keyword + ".*", $options: 'i'}}]
+                    }, { hash: { $regex: ".*" + keyword + ".*", $options: 'i' } }]
                 }, "", skip, limit, {});
             responseTransaction = [...fromTransaction, ...toTransaction]
         } else {
             Utils.lhtLog("BLManager:getAccountDetailsUsingAddress", "get total transaction without keyword", "", "");
 
             let fromTransaction = await TransactionModel.getTransactionList(
-                {from: address}, "", skip, limit, {[sortKey]: sortType}
+                { from: address }, "", skip, limit, { [sortKey]: sortType }
             )
             let toTransaction = await TransactionModel.getTransactionList(
-                {to: address}, "", skip, limit, {[sortKey]: sortType}
+                { to: address }, "", skip, limit, { [sortKey]: sortType }
             )
             // return toTransaction;
             responseTransaction = [...fromTransaction, ...toTransaction]
@@ -83,15 +83,15 @@ export default class Manger {
     getFiltersForAddressTxn = async (requestData) => {
         const address = requestData.address.toLowerCase();
         const [fromTransaction, toTransaction] = await Promise.all([
-            TransactionModel.getTransactionList({from: address}, '', 0, 1, {blockNumber: -1}),
-            TransactionModel.getTransactionList({to: address}, '', 0, 1, {blockNumber: -1})]);
+            TransactionModel.getTransactionList({ from: address }, '', 0, 1, { blockNumber: -1 }),
+            TransactionModel.getTransactionList({ to: address }, '', 0, 1, { blockNumber: -1 })]);
         if ((!fromTransaction || !fromTransaction.length) && (!toTransaction || !toTransaction.length))
-            return {startDate: new Date().getTime()}
+            return { startDate: new Date().getTime() }
         else if (!fromTransaction || !fromTransaction.length)
-            return {startDate: toTransaction[0].timestamp * 1000}
+            return { startDate: toTransaction[0].timestamp * 1000 }
         else if (!toTransaction || !toTransaction.length)
-            return {startDate: fromTransaction[0].timestamp * 1000}
-        else return {startDate: fromTransaction[0].timestamp > toTransaction[0].timestamp ? toTransaction[0].timestamp * 1000 : fromTransaction[0].timestamp * 1000}
+            return { startDate: fromTransaction[0].timestamp * 1000 }
+        else return { startDate: fromTransaction[0].timestamp > toTransaction[0].timestamp ? toTransaction[0].timestamp * 1000 : fromTransaction[0].timestamp * 1000 }
     };
 
     getFilteredTransactionsForAddress = async (requestData) => {
@@ -111,7 +111,7 @@ export default class Manger {
         delete txnListRequest.requestData.startDate
         delete txnListRequest.requestData.endDate
         if (startDate && endDate)
-            txnListRequest.requestData.timestamp = {$gte: startDate / 1000, $lte: endDate / 1000}
+            txnListRequest.requestData.timestamp = { $gte: startDate / 1000, $lte: endDate / 1000 }
         const [fromTransaction, toTransaction] = await Promise.all([TransactionModel.getTransactionList({
             ...txnListRequest.requestData, from: address
         }, txnListRequest.selectionKeys, txnListRequest.skip, txnListRequest.limit, txnListRequest.sorting), TransactionModel.getTransactionList({
@@ -139,35 +139,35 @@ export default class Manger {
     };
 
 
-    syncTransactionsFromCoinMarketAPI=async(address)=>{
+    syncTransactionsFromCoinMarketAPI = async (address) => {
         const [fromCount, toCount] = await Promise.all([
-            TransactionModel.countDocuments({ from: address}),
-            TransactionModel.countDocuments({to: address})]);
+            TransactionModel.countDocuments({ from: address }),
+            TransactionModel.countDocuments({ to: address })]);
 
-        let totalTransactions=fromCount+toCount;
-        let URL="https://xdc.blocksscan.io/api/txs/listByAccount/"+address+"?page=1&limit=100&tx_type=all";
+        let totalTransactions = fromCount + toCount;
+        let URL = "https://xdc.blocksscan.io/api/txs/listByAccount/" + address + "?page=1&limit=100&tx_type=all";
         const response = JSON.parse(await HttpService.executeHTTPRequest(httpConstants.METHOD_TYPE.GET, URL, "", {}, {}));
-        let totalTransactionsFromBlockScan=response.total;
-        let totalPages=response.pages;
-        if(totalTransactions >= totalTransactionsFromBlockScan)
+        let totalTransactionsFromBlockScan = response.total;
+        let totalPages = response.pages;
+        if (totalTransactions >= totalTransactionsFromBlockScan)
             return;
-        await this.syncTransactionsBasedOnPage(address,totalPages);
+        await this.syncTransactionsBasedOnPage(address, totalPages);
     }
 
-    syncTransactionsBasedOnPage=async(address,pages)=>{
-        for(let index=1;index<=pages;index++){
-            let URL="https://xdc.blocksscan.io/api/txs/listByAccount/"+address+"?page="+index+"&limit=100&tx_type=all";
+    syncTransactionsBasedOnPage = async (address, pages) => {
+        for (let index = 1; index <= pages; index++) {
+            let URL = "https://xdc.blocksscan.io/api/txs/listByAccount/" + address + "?page=" + index + "&limit=100&tx_type=all";
             const response = JSON.parse(await HttpService.executeHTTPRequest(httpConstants.METHOD_TYPE.GET, URL, "", {}, {}));
-           let queueData=response.items && response.items.map((transaction)=>{
-               return this.parseTransaction(transaction);
-           })
+            let queueData = response.items && response.items.map((transaction) => {
+                return this.parseTransaction(transaction);
+            })
             let rabbitMqController = new RabbitMqController();
             await rabbitMqController.insertInQueue(Config.SYNC_TRANSACTION_EXCHANGE, Config.SYNC_TRANSACTION_QUEUE, "", "", "", "", "", amqpConstants.exchangeType.FANOUT, amqpConstants.queueType.PUBLISHER_SUBSCRIBER_QUEUE, JSON.stringify(queueData));
         }
     }
 
-    parseTransaction(txDetail){
-        const tx={
+    parseTransaction(txDetail) {
+        const tx = {
             blockHash: txDetail.blockHash || "",
             blockNumber: txDetail.blockNumber || 0,
             hash: txDetail.hash.toLowerCase() || "",
@@ -182,7 +182,7 @@ export default class Manger {
             value: txDetail.value || "",
             cumulativeGasUsed: txDetail.cumulativeGasUsed || 0,
             status: txDetail.status || false,
-            timestamp: (moment(txDetail.timestamp).valueOf()/1000) || 0,
+            timestamp: (moment(txDetail.timestamp).valueOf() / 1000) || 0,
             modifiedOn: Date.now(),
             createdOn: Date.now(),
             isDeleted: false,
@@ -197,7 +197,7 @@ export default class Manger {
         let skip = parseInt(req.skip ? req.skip : 0);
         let limit = parseInt(req.limit ? req.limit : 10);
         let sortKey = parseInt(req.sortKey ? req.sortKey : -1);
-        return await TransactionModel.getTransactionList({value: {$gte: 0}}, {}, skip, limit, {blockNumber: Number(sortKey)});
+        return await TransactionModel.getTransactionList({ value: { $gte: 0 } }, {}, skip, limit, { blockNumber: Number(sortKey) });
 
     }
     getTotalTransactions = async () => {
@@ -212,7 +212,7 @@ export default class Manger {
         const startDate = requestData.startDate
         const endDate = requestData.endDate
         if (requestData.searchValue)
-            requestData.searchKeys = ["hash", "from", "to","blockNumber"]
+            requestData.searchKeys = ["hash", "from", "to", "blockNumber"]
 
         const txnListRequest = this.parseGetTxnListRequest(requestData);
         delete txnListRequest.requestData.address
@@ -221,10 +221,10 @@ export default class Manger {
         delete txnListRequest.requestData.endDate
 
         if (startDate && endDate)
-            txnListRequest.requestData.timestamp = {$gte: startDate / 1000, $lte: endDate / 1000}
+            txnListRequest.requestData.timestamp = { $gte: startDate / 1000, $lte: endDate / 1000 }
         const [fromCount, toCount] = await Promise.all([
-            TransactionModel.countDocuments({...txnListRequest.requestData, from: address}),
-            TransactionModel.countDocuments({...txnListRequest.requestData, to: address})]);
+            TransactionModel.countDocuments({ ...txnListRequest.requestData, from: address }),
+            TransactionModel.countDocuments({ ...txnListRequest.requestData, to: address })]);
         if (txnType)
             return txnType === 'IN' ? toCount : fromCount
         return (fromCount || 0) + (toCount || 0);
@@ -233,7 +233,7 @@ export default class Manger {
     getAddressStats = async (addressHash) => {
         addressHash = addressHash.toLowerCase();
         Utils.lhtLog("BLManager:getAddressStats", "getAddressStats started", "", "");
-        let addressStatsResponse = await AddressStatsModel.getAccount({address: addressHash});
+        let addressStatsResponse = await AddressStatsModel.getAccount({ address: addressHash });
         Utils.lhtLog("BLManager:getAddressStats", "addressStatsResponse", addressStatsResponse, "");
         let transactionTimestamp = await this.getAddressLastTransaction(addressHash);
         Utils.lhtLog("BLManager:getAddressStats", "addressLastTransactionTimestamp ", transactionTimestamp, "");
@@ -254,7 +254,7 @@ export default class Manger {
     }
 
     async addressStatsDetails(addressHash, lastTransactionTimestamp, fromAndToTransactions) {
-        let addressDetails = await AddressModel.getAccount({address: addressHash});
+        let addressDetails = await AddressModel.getAccount({ address: addressHash });
 
         Utils.lhtLog("BLManager:getAddressStats", "transactionCount started", fromAndToTransactions, "");
         let getAddressTokenStats = await this.getAddressTokenStats(addressHash);
@@ -276,6 +276,7 @@ export default class Manger {
             timestamp: addressDetails && addressDetails.timestamp ? addressDetails.timestamp : 0,
             avgBalance: highestAndAvgBalance.avgBalance,
             gasFee: gasFee,
+            totalGasPrice: highestAndAvgBalance.totalGasPrice,
             totalTransactionsCount: fromAndToTransactions.totalTransaction,
             fromTransactionsCount: fromAndToTransactions.fromCount,
             toTransactionsCount: fromAndToTransactions.toCount,
@@ -294,35 +295,37 @@ export default class Manger {
     calculateBalance(totalAverage, currentBalance) {
         if (totalAverage.length <= 0)
             return {};
-        let avgBalance = [];
-        let highest = Number(totalAverage[0].amount);
+        let avgBalance = [] , totalGasPrice=0;
+        let highest = Number(totalAverage[0].amount <= 10000000000 ? totalAverage[0].amount * 1000000000000000000 : totalAverage[0].amount);
         totalAverage.map((avg) => {
-            highest = highest > Number(avg.amount) ? highest : Number(avg.amount);
+            totalGasPrice = totalGasPrice + Number(avg.gasPrice); 
+            let amounts = avg.amount <= 10000000000 ? Number(avg.amount * 1000000000000000000) : Number(avg.amount);
+            highest = highest > amounts ? highest : amounts;
             if (avg.action === "to")
-                currentBalance = currentBalance - Number(avg.amount);
+                currentBalance = currentBalance - amounts;
             else
-                currentBalance = currentBalance + Number(avg.amount);
+                currentBalance = currentBalance + amounts;
             avgBalance.push(currentBalance)
         })
         let sum = avgBalance.reduce((a, b) => (a) + (b), 0);
         return {
             avgBalance: Math.abs(sum) / avgBalance.length,
-            highestTransaction: highest
+            highestTransaction: highest,
+            totalGasPrice
         }
-
     }
 
     async getAddressLastTransaction(addressHash) {
         if (!addressHash)
             return {};
-        let fromDetails = await TransactionModel.getTransactionList({from: addressHash}, {
+        let fromDetails = await TransactionModel.getTransactionList({ from: addressHash }, {
             timestamp: 1,
             blockNumber: 1
-        }, 0, 1, {blockNumber: -1});
-        let toDetails = await TransactionModel.getTransactionList({to: addressHash}, {
+        }, 0, 1, { blockNumber: -1 });
+        let toDetails = await TransactionModel.getTransactionList({ to: addressHash }, {
             timestamp: 1,
             blockNumber: 1
-        }, 0, 1, {blockNumber: -1});
+        }, 0, 1, { blockNumber: -1 });
         let fromTimestamp = fromDetails && fromDetails.length > 0 ? fromDetails[0].timestamp : 0;
         let toTimestamp = toDetails && toDetails.length > 0 ? toDetails[0].timestamp : 0;
         return fromTimestamp > toTimestamp ? fromTimestamp : toTimestamp;
@@ -342,8 +345,8 @@ export default class Manger {
                 {
                     $group: {
                         _id: null,
-                        gasFee: {$sum: "$gasUsed"},
-                        avgTransactions: {$push: {"amount": "$value", "action": "to", "timestamp": "$timestamp"}}
+                        gasFee: { $sum: "$gasUsed" },
+                        avgTransactions: { $push: { "amount": "$value", "action": "to", "timestamp": "$timestamp" , "gasPrice": "$gasPrice" } }
                     }
                 }
             ]
@@ -363,8 +366,8 @@ export default class Manger {
                 {
                     $group: {
                         _id: null,
-                        gasFee: {$sum: "$gasUsed"},
-                        avgTransactions: {$push: {"amount": "$value", "action": "from", "timestamp": "$timestamp"}}
+                        gasFee: { $sum: "$gasUsed" },
+                        avgTransactions: { $push: { "amount": "$value", "action": "from", "timestamp": "$timestamp", "gasPrice": "$gasPrice" } }
                     }
                 }
             ]
@@ -375,14 +378,14 @@ export default class Manger {
     async getAddressTokenStats(address) {
         if (!address)
             return {};
-        return TokenHolderModel.find({address: address}).count();
+        return TokenHolderModel.find({ address: address }).count();
     }
 
     async getAddressTransactionsCountStats(address) {
         if (!address)
             return {};
-        let toTransactionCount = await TransactionModel.countData({to: address})
-        let fromTransactionCount = await TransactionModel.countData({from: address})
+        let toTransactionCount = await TransactionModel.countData({ to: address })
+        let fromTransactionCount = await TransactionModel.countData({ from: address })
         return {
             fromCount: fromTransactionCount,
             toCount: toTransactionCount,
@@ -393,7 +396,7 @@ export default class Manger {
     async getAddressTransactionsHighestValueStats(address) {
         if (!address)
             return {};
-        return await TransactionModel.getTransactionList({$or: [{from: address}, {to: address}]}, {value: 1}, 0, 1, {value: -1});
+        return await TransactionModel.getTransactionList({ $or: [{ from: address }, { to: address }] }, { value: 1 }, 0, 1, { value: -1 });
     }
 
     async getAddressAverageBalanceStats(address) {
@@ -406,26 +409,26 @@ export default class Manger {
                         from: address
                     }
                 }, {
-                $group: {
-                    _id: "$from",
-                    avgBalance: {$avg: "$value"}
+                    $group: {
+                        _id: "$from",
+                        avgBalance: { $avg: "$value" }
+                    }
                 }
-            }
             ]
         );
     }
 
     getSomeDaysTransactions = async (params) => {
-        let selectionKey = {day: 1, transactionCount: 1, avgGasPrice: 1, timestamp: 1}
+        let selectionKey = { day: 1, transactionCount: 1, avgGasPrice: 1, timestamp: 1 }
         Utils.lhtLog("BLManager:getTotalTransactions", "get getSomeDaysTransactions  count", "", "");
-        return await TransactionHistoryModel.getHistoricalDataList({}, selectionKey, 0, parseInt(params.days), {timestamp: -1});
+        return await TransactionHistoryModel.getHistoricalDataList({}, selectionKey, 0, parseInt(params.days), { timestamp: -1 });
     }
 
     getTransactionDetailsUsingHash = async (params) => {
         let hash = params.hash.toLowerCase();
-        const transaction = await TransactionModel.getTransaction({hash: hash});
+        const transaction = await TransactionModel.getTransaction({ hash: hash });
         if (!transaction)
-            throw {message: apiFailureMessage.NO_TRANSACTION}
+            throw { message: apiFailureMessage.NO_TRANSACTION }
         return transaction;
 
     }
@@ -444,7 +447,7 @@ export default class Manger {
         }
         let sorting = '';
         if (requestObj.sortKey) {
-            sorting = {[requestObj.sortKey]: requestObj.sortType || -1};
+            sorting = { [requestObj.sortKey]: requestObj.sortType || -1 };
             delete requestObj.sortKey;
             delete requestObj.sortType;
         }
@@ -456,11 +459,11 @@ export default class Manger {
         let searchQuery = [];
         if (requestObj.searchKeys && requestObj.searchValue && Array.isArray(requestObj.searchKeys) && requestObj.searchKeys.length) {
             requestObj.searchKeys.map((searchKey) => {
-                let searchRegex = {"$regex": requestObj.searchValue, "$options": "i"}
-                if(searchKey==="blockNumber" &&  !isNaN(Number(requestObj.searchValue))){
-                    searchRegex = Number(requestObj.searchValue)  
+                let searchRegex = { "$regex": requestObj.searchValue, "$options": "i" }
+                if (searchKey === "blockNumber" && !isNaN(Number(requestObj.searchValue))) {
+                    searchRegex = Number(requestObj.searchValue)
                 }
-                searchQuery.push({[searchKey]: searchRegex});
+                searchQuery.push({ [searchKey]: searchRegex });
             });
             requestObj["$or"] = searchQuery;
         }
@@ -468,6 +471,6 @@ export default class Manger {
             delete requestObj.searchKeys;
         if (requestObj.searchValue)
             delete requestObj.searchValue;
-        return {requestData: requestObj, skip, limit, sorting, selectionKeys};
+        return { requestData: requestObj, skip, limit, sorting, selectionKeys };
     }
 }
