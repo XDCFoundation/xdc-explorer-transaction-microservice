@@ -14,6 +14,7 @@ const AddressStatSchema = new Schema({
     tokens: {type: Schema.Types.Mixed, default: []},
     highestTransaction: {type: Number, default: 0},
     totalGasPrice:{type: Number, default: 0},
+    txnFeePaid:{type: Number, default: 0},
     lastTransactionTimestamp: {type: Number, default: 0},
     createdOn: {type: Number, default: Date.now()},
     modifiedOn: {type: Number, default: Date.now()},

@@ -277,6 +277,7 @@ export default class Manger {
             avgBalance: highestAndAvgBalance.avgBalance,
             gasFee: gasFee,
             totalGasPrice: highestAndAvgBalance.totalGasPrice,
+            txnFeePaid: highestAndAvgBalance.txnFeePaid,
             totalTransactionsCount: fromAndToTransactions.totalTransaction,
             fromTransactionsCount: fromAndToTransactions.fromCount,
             toTransactionsCount: fromAndToTransactions.toCount,
@@ -295,10 +296,11 @@ export default class Manger {
     calculateBalance(totalAverage, currentBalance) {
         if (totalAverage.length <= 0)
             return {};
-        let avgBalance = [] , totalGasPrice=0;
+        let avgBalance = [] , totalGasPrice=0 , txnFeePaid = 0 ;
         let highest = Number(totalAverage[0].amount <= 10000000000 ? totalAverage[0].amount * 1000000000000000000 : totalAverage[0].amount);
         totalAverage.map((avg) => {
             totalGasPrice = totalGasPrice + Number(avg.gasPrice); 
+            txnFeePaid = txnFeePaid + (Number(avg.gasPrice) * Number(avg.gasUsed)) ;
             let amounts = avg.amount <= 10000000000 ? Number(avg.amount * 1000000000000000000) : Number(avg.amount);
             highest = highest > amounts ? highest : amounts;
             if (avg.action === "to")
@@ -311,7 +313,8 @@ export default class Manger {
         return {
             avgBalance: Math.abs(sum) / avgBalance.length,
             highestTransaction: highest,
-            totalGasPrice
+            totalGasPrice,
+            txnFeePaid
         }
     }
 
@@ -346,7 +349,7 @@ export default class Manger {
                     $group: {
                         _id: null,
                         gasFee: { $sum: "$gasUsed" },
-                        avgTransactions: { $push: { "amount": "$value", "action": "to", "timestamp": "$timestamp" , "gasPrice": "$gasPrice" } }
+                        avgTransactions: { $push: { "amount": "$value", "action": "to", "timestamp": "$timestamp" , "gasPrice": "$gasPrice"  , "gasUsed": "$gasUsed"} }
                     }
                 }
             ]
@@ -367,7 +370,7 @@ export default class Manger {
                     $group: {
                         _id: null,
                         gasFee: { $sum: "$gasUsed" },
-                        avgTransactions: { $push: { "amount": "$value", "action": "from", "timestamp": "$timestamp", "gasPrice": "$gasPrice" } }
+                        avgTransactions: { $push: { "amount": "$value", "action": "from", "timestamp": "$timestamp", "gasPrice": "$gasPrice" , "gasUsed": "$gasUsed"} }
                     }
                 }
             ]
