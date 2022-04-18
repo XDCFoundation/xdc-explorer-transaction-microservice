@@ -144,7 +144,10 @@ export default class Manger {
             let account = await AccountModel.getAccount(findObjAddresses);
             console.log(account, "account");
             if (account) {
-                responseStatus.push({'redirect': 'account', account})
+                if(account.accountType === 1)
+                    responseStatus.push({'redirect': 'contract', account})
+                else 
+                    responseStatus.push({'redirect': 'account', account})
                 return responseStatus;
             }
             // account = await this.getAddressDataFromSocket(data)
@@ -166,7 +169,9 @@ export default class Manger {
             let response;
             if (code === "0x") {
                 response = await this.getAddressDataFromSocket(data)
-                if (response)
+                if (response.accountType === 1)
+                    responseStatus.push({'redirect': 'contract', account: response})
+                else
                     responseStatus.push({'redirect': 'account', account: response})
             } else {
                 response = await this.getTokenDataFromSocket(data)
