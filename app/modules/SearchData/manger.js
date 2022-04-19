@@ -144,7 +144,10 @@ export default class Manger {
             let account = await AccountModel.getAccount(findObjAddresses);
             console.log(account, "account");
             if (account) {
-                responseStatus.push({'redirect': 'account', account})
+                if(account.accountType === 1)
+                    responseStatus.push({'redirect': 'contract', account})
+                else 
+                    responseStatus.push({'redirect': 'account', account})
                 return responseStatus;
             }
             // account = await this.getAddressDataFromSocket(data)
@@ -153,20 +156,22 @@ export default class Manger {
             // return responseStatus;
             // }
             // }
-            const findObj = {
-                "address": data,
-                "ERC": {$gte: 2}
-            };
-            let token = await TokenModel.findOne(findObj);
-            if (token) {
-                responseStatus.push({'redirect': 'token', token})
-                return responseStatus;
-            }
+            // const findObj = {
+            //     "address": data,
+            //     "ERC": {$gte: 2}
+            // };
+            // let token = await TokenModel.findOne(findObj);
+            // if (token) {
+            //     responseStatus.push({'redirect': 'token', token})
+            //     return responseStatus;
+            // }
             const code = await web3.eth.getCode(data);
             let response;
             if (code === "0x") {
                 response = await this.getAddressDataFromSocket(data)
-                if (response)
+                if (response.accountType === 1)
+                    responseStatus.push({'redirect': 'contract', account: response})
+                else
                     responseStatus.push({'redirect': 'account', account: response})
             } else {
                 response = await this.getTokenDataFromSocket(data)
