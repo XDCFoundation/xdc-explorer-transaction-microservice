@@ -156,15 +156,15 @@ export default class Manger {
             // return responseStatus;
             // }
             // }
-            const findObj = {
-                "address": data,
-                "ERC": {$gte: 2}
-            };
-            let token = await TokenModel.findOne(findObj);
-            if (token) {
-                responseStatus.push({'redirect': 'token', token})
-                return responseStatus;
-            }
+            // const findObj = {
+            //     "address": data,
+            //     "ERC": {$gte: 2}
+            // };
+            // let token = await TokenModel.findOne(findObj);
+            // if (token) {
+            //     responseStatus.push({'redirect': 'token', token})
+            //     return responseStatus;
+            // }
             const code = await web3.eth.getCode(data);
             let response;
             if (code === "0x") {
