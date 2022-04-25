@@ -67,8 +67,15 @@ export default class Manger {
             let toTransaction = await TransactionModel.getTransactionList(
                 { to: address }, "", skip, limit, { [sortKey]: sortType }
             )
+            let creationTransaction =  [];
+            if (queryStringParameter && queryStringParameter.hash)
+            {  
+                 creationTransaction = await TransactionModel.getTransactionList(
+                    { hash: queryStringParameter.hash }, "", skip, limit, { [sortKey]: sortType }
+                )
+            }
             // return toTransaction;
-            responseTransaction = [...fromTransaction, ...toTransaction]
+            responseTransaction = [...fromTransaction, ...toTransaction , ...creationTransaction]
 
             responseTransaction = responseTransaction.sort((transaction1, transaction2) => {
                 if (sortType === 1)
