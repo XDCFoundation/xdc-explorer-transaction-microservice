@@ -1,6 +1,7 @@
 import Utils from '../../utils'
 import TransactionModel from "../../models/transaction";
 import TransactionHistoryModel from "../../models/historical";
+import ContractModel from "../../models/contract";
 import { amqpConstants, apiFailureMessage, httpConstants } from '../../common/constants';
 import AddressModel from "../../models/account";
 import AddressStatsModel from "../../models/addressStats";
@@ -229,9 +230,13 @@ export default class Manger {
 
         if (startDate && endDate)
             txnListRequest.requestData.timestamp = { $gte: startDate / 1000, $lte: endDate / 1000 }
-        const [fromCount, toCount] = await Promise.all([
+        let [fromCount, toCount] = await Promise.all([
             TransactionModel.countDocuments({ ...txnListRequest.requestData, from: address }),
-            TransactionModel.countDocuments({ ...txnListRequest.requestData, to: address })]);
+            TransactionModel.countDocuments({ ...txnListRequest.requestData, to: address })
+        ]);
+        const isContract = await ContractModel.getContract({address:address})
+        if(isContract)
+         toCount = toCount + 1;
         if (txnType)
             return txnType === 'IN' ? toCount : fromCount
         return (fromCount || 0) + (toCount || 0);
