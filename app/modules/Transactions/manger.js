@@ -212,7 +212,7 @@ export default class Manger {
         return await TransactionModel.countData({});
     }
 
-    getTransactionsCountForAddress = async (requestData) => {
+    getTransactionsCountForAddress = async (requestData , reqBody) => {
         if (!requestData) requestData = {}
         const address = requestData.address.toLowerCase()
         const txnType = requestData.txnType
@@ -229,9 +229,12 @@ export default class Manger {
 
         if (startDate && endDate)
             txnListRequest.requestData.timestamp = { $gte: startDate / 1000, $lte: endDate / 1000 }
-        const [fromCount, toCount] = await Promise.all([
+        let [fromCount, toCount] = await Promise.all([
             TransactionModel.countDocuments({ ...txnListRequest.requestData, from: address }),
-            TransactionModel.countDocuments({ ...txnListRequest.requestData, to: address })]);
+            TransactionModel.countDocuments({ ...txnListRequest.requestData, to: address })
+        ]);
+        if(reqBody && reqBody.hash )
+            toCount = toCount + 1;
         if (txnType)
             return txnType === 'IN' ? toCount : fromCount
         return (fromCount || 0) + (toCount || 0);

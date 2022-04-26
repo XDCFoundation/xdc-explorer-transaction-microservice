@@ -46,7 +46,7 @@ export default class Index {
   }
   async getTransactionsCountForAddress (request , response) {
     Utils.lhtLog('Inside getTransactionsCountForAddress', request.params, 'getTransactionsCountForAddress', 0, '')
-    const [error, getMetersRes] = await Utils.parseResponse(new BLManager().getTransactionsCountForAddress({...request.params, ...request.query}))
+    const [error, getMetersRes] = await Utils.parseResponse(new BLManager().getTransactionsCountForAddress({...request.params, ...request.query},request.body))
     if (!getMetersRes) { return Utils.handleError(error, request, response) }
     return Utils.response(response, getMetersRes, apiSuccessMessage.FETCH_SUCCESS, httpConstants.RESPONSE_STATUS.SUCCESS, httpConstants.RESPONSE_CODES.OK)
   }
