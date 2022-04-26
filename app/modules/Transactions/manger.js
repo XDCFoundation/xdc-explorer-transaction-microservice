@@ -1,6 +1,7 @@
 import Utils from '../../utils'
 import TransactionModel from "../../models/transaction";
 import TransactionHistoryModel from "../../models/historical";
+import ContractModel from "../../models/contract";
 import { amqpConstants, apiFailureMessage, httpConstants } from '../../common/constants';
 import AddressModel from "../../models/account";
 import AddressStatsModel from "../../models/addressStats";
@@ -212,7 +213,7 @@ export default class Manger {
         return await TransactionModel.countData({});
     }
 
-    getTransactionsCountForAddress = async (requestData , reqBody) => {
+    getTransactionsCountForAddress = async (requestData) => {
         if (!requestData) requestData = {}
         const address = requestData.address.toLowerCase()
         const txnType = requestData.txnType
@@ -233,8 +234,9 @@ export default class Manger {
             TransactionModel.countDocuments({ ...txnListRequest.requestData, from: address }),
             TransactionModel.countDocuments({ ...txnListRequest.requestData, to: address })
         ]);
-        if(reqBody && reqBody.hash )
-            toCount = toCount + 1;
+        const isContract = await ContractModel.getContract({address:address})
+        if(isContract)
+         toCount = toCount + 1;
         if (txnType)
             return txnType === 'IN' ? toCount : fromCount
         return (fromCount || 0) + (toCount || 0);
