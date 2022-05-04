@@ -124,32 +124,32 @@ export default class Manger {
         // const toCount = await TransactionModel.count({to:address});
         // let fromSkip = fromCount < txnListRequest.skip ? fromCount : txnListRequest.skip
         //  , toSkip = toCount < txnListRequest.skip ? toCount : txnListRequest.skip;
-    //   responseTransactions = await TransactionModel.getTransactionList({ ...txnListRequest.requestData, $or:[{ from: address} , { to: address}]}, txnListRequest.selectionKeys, txnListRequest.skip, txnListRequest.limit, txnListRequest.sorting);
-        const [fromTransaction, toTransaction] = await Promise.all([TransactionModel.getTransactionList({
-            ...txnListRequest.requestData, from: address
-        }, txnListRequest.selectionKeys, txnListRequest.skip, txnListRequest.limit, txnListRequest.sorting), TransactionModel.getTransactionList({
-            ...txnListRequest.requestData, to: address
-        }, txnListRequest.selectionKeys, txnListRequest.skip, txnListRequest.limit, txnListRequest.sorting)]);
+      responseTransactions = await TransactionModel.getTransactionList({ ...txnListRequest.requestData, $or:[{ from: address} , { to: address}]}, txnListRequest.selectionKeys, txnListRequest.skip, txnListRequest.limit, txnListRequest.sorting);
+        // const [fromTransaction, toTransaction] = await Promise.all([TransactionModel.getTransactionList({
+        //     ...txnListRequest.requestData, from: address
+        // }, txnListRequest.selectionKeys, txnListRequest.skip, txnListRequest.limit, txnListRequest.sorting), TransactionModel.getTransactionList({
+        //     ...txnListRequest.requestData, to: address
+        // }, txnListRequest.selectionKeys, txnListRequest.skip, txnListRequest.limit, txnListRequest.sorting)]);
 
-        if (txnType)
-            return txnType === 'IN' ? toTransaction : fromTransaction;``
+        // if (txnType)
+        //     return txnType === 'IN' ? toTransaction : fromTransaction;``
 
-        responseTransactions = [...fromTransaction, ...toTransaction]
+        // responseTransactions = [...fromTransaction, ...toTransaction]
         // try{
         //  // this.syncTransactionsFromCoinMarketAPI(address);}
         // catch(err){
         //     console.log("syncTransactionsFromCoinMarketAPI catch",err);
         // }
 
-        responseTransactions.sort((transaction1, transaction2) => {
-            if (sortType === 1)
-                return (transaction1[sortKey] - transaction2[sortKey])
-            else
-                return (transaction2[sortKey] - transaction1[sortKey])
-        })
+        // responseTransactions.sort((transaction1, transaction2) => {
+        //     if (sortType === 1)
+        //         return (transaction1[sortKey] - transaction2[sortKey])
+        //     else
+        //         return (transaction2[sortKey] - transaction1[sortKey])
+        // })
 
-        return responseTransactions.slice(0, txnListRequest.limit)
-        // return responseTransactions;
+        // return responseTransactions.slice(0, txnListRequest.limit)
+        return responseTransactions;
     };
 
 
