@@ -127,9 +127,9 @@ export default class Manger {
     //   responseTransactions = await TransactionModel.getTransactionList({ ...txnListRequest.requestData, $or:[{ from: address} , { to: address}]}, txnListRequest.selectionKeys, txnListRequest.skip, txnListRequest.limit, txnListRequest.sorting);
         const [fromTransaction, toTransaction] = await Promise.all([TransactionModel.getTransactionList({
             ...txnListRequest.requestData, from: address
-        }, txnListRequest.selectionKeys, fromSkip, txnListRequest.limit, txnListRequest.sorting), TransactionModel.getTransactionList({
+        }, txnListRequest.selectionKeys, txnListRequest.skip, txnListRequest.limit, txnListRequest.sorting), TransactionModel.getTransactionList({
             ...txnListRequest.requestData, to: address
-        }, txnListRequest.selectionKeys, toSkip, txnListRequest.limit, txnListRequest.sorting)]);
+        }, txnListRequest.selectionKeys, txnListRequest.skip, txnListRequest.limit, txnListRequest.sorting)]);
 
         if (txnType)
             return txnType === 'IN' ? toTransaction : fromTransaction;``
