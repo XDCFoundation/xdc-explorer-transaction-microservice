@@ -260,6 +260,21 @@ export default class Manger {
         }
 
         let fromAndToTransactions = await this.getAddressTransactionsCountStats(addressHash);
+        if(Config.WATCHLIST_ADDRESSES.includes(addressHash))
+        {
+            let reqObj={
+                address: addressHash,
+                totalTransactionsCount: fromAndToTransactions.totalTransaction,
+                fromTransactionsCount: fromAndToTransactions.fromCount,
+                toTransactionsCount: fromAndToTransactions.toCount,
+                createdOn: Date.now(),
+                modifiedOn: Date.now(),
+                isDeleted: false,
+                isActive: true
+
+            }
+           return await AddressStatsModel.updateAccount({address: addressHash}, reqObj);
+        }
 
         if (fromAndToTransactions.totalTransaction > Config.ADDRESS_STATS_TRANSACTION_COUNT) {
             this.addressStatsDetails(addressHash, transactionTimestamp, fromAndToTransactions);
