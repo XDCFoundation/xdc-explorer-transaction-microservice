@@ -134,7 +134,7 @@ export default class Manger {
         if (txnType)
             return txnType === 'IN' ? toTransaction : fromTransaction;
 
-        // responseTransactions = [...fromTransaction, ...toTransaction]
+         responseTransactions = [...fromTransaction, ...toTransaction]
         // try{
         //  // this.syncTransactionsFromCoinMarketAPI(address);}
         // catch(err){
