@@ -252,6 +252,8 @@ export default class Manger {
         addressHash = addressHash.toLowerCase();
         Utils.lhtLog("BLManager:getAddressStats", "getAddressStats started", "", "");
         let addressStatsResponse = await AddressStatsModel.getAccount({ address: addressHash });
+        if(Config.WATCHLIST_ADDRESSES.includes(addressHash))
+            return addressStatsResponse;
         Utils.lhtLog("BLManager:getAddressStats", "addressStatsResponse", addressStatsResponse, "");
         let transactionTimestamp = await this.getAddressLastTransaction(addressHash);
         Utils.lhtLog("BLManager:getAddressStats", "addressLastTransactionTimestamp ", transactionTimestamp, "");
@@ -260,21 +262,6 @@ export default class Manger {
         }
 
         let fromAndToTransactions = await this.getAddressTransactionsCountStats(addressHash);
-        if(Config.WATCHLIST_ADDRESSES.includes(addressHash))
-        {
-            let reqObj={
-                address: addressHash,
-                totalTransactionsCount: fromAndToTransactions.totalTransaction,
-                fromTransactionsCount: fromAndToTransactions.fromCount,
-                toTransactionsCount: fromAndToTransactions.toCount,
-                createdOn: Date.now(),
-                modifiedOn: Date.now(),
-                isDeleted: false,
-                isActive: true
-
-            }
-           return await AddressStatsModel.updateAccount({address: addressHash}, reqObj);
-        }
 
         if (fromAndToTransactions.totalTransaction > Config.ADDRESS_STATS_TRANSACTION_COUNT) {
             this.addressStatsDetails(addressHash, transactionTimestamp, fromAndToTransactions);
