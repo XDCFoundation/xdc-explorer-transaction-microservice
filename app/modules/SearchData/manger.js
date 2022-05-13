@@ -61,7 +61,6 @@ export default class Manger {
 
 
     searchAllFilters = async (data, type) => {
-
         let responseStatus = [];
         if (type === genericConstants.REQUEST_TYPE.TRANSACTION) {
             responseStatus = await this.searchTransaction(data)
@@ -142,7 +141,6 @@ export default class Manger {
 
             const findObjAddresses = {"address": data};
             let account = await AccountModel.getAccount(findObjAddresses);
-            console.log(account, "account");
             if (account) {
                 if(account.accountType === 1)
                     responseStatus.push({'redirect': 'contract', account})
@@ -166,7 +164,7 @@ export default class Manger {
             //     return responseStatus;
             // }
             const code = await web3.eth.getCode(data);
-            let response;
+            let response = [];
             if (code === "0x") {
                 response = await this.getAddressDataFromSocket(data)
                 if (response.accountType === 1)
@@ -174,7 +172,8 @@ export default class Manger {
                 else
                     responseStatus.push({'redirect': 'account', account: response})
             } else {
-                response = await this.getTokenDataFromSocket(data)
+                let responseData = await this.getTokenDataFromSocket(data)
+                response.push(responseData)
                 if (response)
                     responseStatus.push({'redirect': 'token', token: response})
             }
