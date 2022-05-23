@@ -17,12 +17,12 @@ export default class Manger {
         const findObj = {
             "isActive": true
         };
-        Utils.lhtLog("BLManager:getNetworkDetails", "get getNetworkDetails ", "", "");
-        return await NetworkDetailModel.getNetworkDetails(findObj);
+        Utils.lhtLog("Manger:getNetworkDetails", "get getNetworkDetails ", "", ""); // change manager log
+        return await NetworkDetailModel.getNetworkDetails(findObj); //no need to use await
     }
     getTransactionsForAddress = async (pathParameter, queryStringParameter) => {
 
-        Utils.lhtLog("BLManager:getAccountDetailsUsingAddress", "getAccountDetailsUsingAddress started", "", "");
+        Utils.lhtLog("Manger:getAccountDetailsUsingAddress", "getAccountDetailsUsingAddress started", "", "");
 
         let skip = parseInt(0),
             limit = parseInt(1),
@@ -43,7 +43,7 @@ export default class Manger {
 
         let responseTransaction = []
 
-        Utils.lhtLog("BLManager:getAccountDetailsUsingAddress", "get total transaction count", "", "");
+        Utils.lhtLog("Manger:getAccountDetailsUsingAddress", "get total transaction count", "", "");
         if (queryStringParameter && queryStringParameter.keyword != null && queryStringParameter.keyword != '') {
             let keyword = queryStringParameter.keyword
             let toTransaction = await TransactionModel.getTransactionList(
@@ -60,7 +60,7 @@ export default class Manger {
                 }, "", skip, limit, {});
             responseTransaction = [...fromTransaction, ...toTransaction]
         } else {
-            Utils.lhtLog("BLManager:getAccountDetailsUsingAddress", "get total transaction without keyword", "", "");
+            Utils.lhtLog("Manger:getAccountDetailsUsingAddress", "get total transaction without keyword", "", "");
 
             let fromTransaction = await TransactionModel.getTransactionList(
                 { from: address }, "", skip, limit, { [sortKey]: sortType }
@@ -207,7 +207,7 @@ export default class Manger {
 
 
     getLatestTransactions = async (req) => {
-        Utils.lhtLog("BLManager:getLatestTransactions", "get getLatestTransactions count " + req, "", "");
+        Utils.lhtLog("Manger:getLatestTransactions", "get getLatestTransactions count " + req, "", "");
         let skip = parseInt(req.skip ? req.skip : 0);
         let limit = parseInt(req.limit ? req.limit : 10);
         let sortKey = parseInt(req.sortKey ? req.sortKey : -1);
@@ -215,7 +215,7 @@ export default class Manger {
 
     }
     getTotalTransactions = async () => {
-        Utils.lhtLog("BLManager:getTotalTransactions", "get getTotalTransactions count ", "", "");
+        Utils.lhtLog("Manger:getTotalTransactions", "get getTotalTransactions count ", "", "");
         return await TransactionModel.countData({});
     }
 
@@ -250,13 +250,13 @@ export default class Manger {
 
     getAddressStats = async (addressHash) => {
         addressHash = addressHash.toLowerCase();
-        Utils.lhtLog("BLManager:getAddressStats", "getAddressStats started", "", "");
+        Utils.lhtLog("Manger:getAddressStats", "getAddressStats started", "", "");
         let addressStatsResponse = await AddressStatsModel.getAccount({ address: addressHash });
         if(Config.WATCHLIST_ADDRESSES.includes(addressHash))
             return addressStatsResponse;
-        Utils.lhtLog("BLManager:getAddressStats", "addressStatsResponse", addressStatsResponse, "");
+        Utils.lhtLog("Manger:getAddressStats", "addressStatsResponse", addressStatsResponse, "");
         let transactionTimestamp = await this.getAddressLastTransaction(addressHash);
-        Utils.lhtLog("BLManager:getAddressStats", "addressLastTransactionTimestamp ", transactionTimestamp, "");
+        Utils.lhtLog("Manger:getAddressStats", "addressLastTransactionTimestamp ", transactionTimestamp, "");
         if (Number(addressStatsResponse && addressStatsResponse.lastTransactionTimestamp) === Number(transactionTimestamp)) {
             return addressStatsResponse;
         }
@@ -276,13 +276,13 @@ export default class Manger {
     async addressStatsDetails(addressHash, lastTransactionTimestamp, fromAndToTransactions) {
         let addressDetails = await AddressModel.getAccount({ address: addressHash });
 
-        Utils.lhtLog("BLManager:getAddressStats", "transactionCount started", fromAndToTransactions, "");
+        Utils.lhtLog("Manger:getAddressStats", "transactionCount started", fromAndToTransactions, "");
         let getAddressTokenStats = await this.getAddressTokenStats(addressHash);
-        Utils.lhtLog("BLManager:getAddressStats", "getAddressTokenStats", getAddressTokenStats, "");
+        Utils.lhtLog("Manger:getAddressStats", "getAddressTokenStats", getAddressTokenStats, "");
         let toStats = await this.getAddressToStats(addressHash);
         let fromStats = await this.getAddressFromStats(addressHash);
-        Utils.lhtLog("BLManager:getAddressStats", "getAddressToStats ", toStats && toStats.length > 0 && toStats[0].avgTransactions.length, "");
-        Utils.lhtLog("BLManager:getAddressStats", "getAddressFromStats ", fromStats && fromStats.length > 0 && fromStats[0].avgTransactions.length, "");
+        Utils.lhtLog("Manger:getAddressStats", "getAddressToStats ", toStats && toStats.length > 0 && toStats[0].avgTransactions.length, "");
+        Utils.lhtLog("Manger:getAddressStats", "getAddressFromStats ", fromStats && fromStats.length > 0 && fromStats[0].avgTransactions.length, "");
 
         let totalAverage = [...(toStats && toStats.length > 0 && toStats[0].avgTransactions ? toStats[0].avgTransactions : []), ...(fromStats && fromStats.length > 0 && fromStats[0].avgTransactions ? fromStats[0].avgTransactions : [])]
         totalAverage.sort((a, b) => a.timestamp > b.timestamp ? -1 : 1);
@@ -443,7 +443,7 @@ export default class Manger {
 
     getSomeDaysTransactions = async (params) => {
         let selectionKey = { day: 1, transactionCount: 1, avgGasPrice: 1, timestamp: 1 }
-        Utils.lhtLog("BLManager:getTotalTransactions", "get getSomeDaysTransactions  count", "", "");
+        Utils.lhtLog("Manger:getTotalTransactions", "get getSomeDaysTransactions  count", "", "");
         return await TransactionHistoryModel.getHistoricalDataList({}, selectionKey, 0, parseInt(params.days), { timestamp: -1 });
     }
 
