@@ -21,42 +21,44 @@ export default class Manger {
         return TransferModel.getTokenList(txnListRequest.requestData, {}, parseInt(txnListRequest.skip), parseInt(txnListRequest.limit), txnListRequest.sorting ? txnListRequest.sorting : { timestamp: -1 });
     }
     getTokenTransactions = async (req) => {
-        Utils.lhtLog("BLManager:getTokenTransactions", "get getTokenTransactions list " + req, "", "");
+        Utils.lhtLog("Manger:getTokenTransactions", "get getTokenTransactions list " + req, "", "");
         let skip = parseInt(req.skip ? req.skip : 0);
         let limit = parseInt(req.limit ? req.limit : 10);
-        let arrayList = [];
-        const [toTransactions, fromTransactions] = await Promise.all([
-            TransactionModel.getTransactionList(
-                { to: req.address },
-                {},
-                skip,
-                limit,
-                req.sortKey ? req.sortKey : { blockNumber: -1 }
-            ),
-            TransactionModel.getTransactionList(
-                { from: req.address },
-                {},
-                skip,
-                limit,
-                req.sortKey ? req.sortKey : { blockNumber: -1 }
-            )
-        ]);
-        let toTransactionsCount = await TransactionModel.countData({ to: req.address })
-        let fromTransactionCount = await TransactionModel.countData({ from: req.address })
-        let responseCount = toTransactionsCount + fromTransactionCount
-        arrayList.push(toTransactions, fromTransactions)
-        let newArray = [...toTransactions, ...fromTransactions]
-        var firstKey = Object.keys(req.sortKey)[0];
-        if (req.sortKey[firstKey] == 1) {
-            newArray.sort((a, b) => {
-                a[firstKey] - b[firstKey]
-            })
-        } else {
-            newArray.sort((a, b) => {
-                b[firstKey] - a[firstKey]
-            })
-        }
-        let responseToSend = newArray.slice(0, limit)
+        let responseToSend = await TransferModel.getTokenList({ $or: [{ to: req.address }, { from: req.address }, { contract: req.address }] }, "", skip, limit, req.sortKey ? req.sortKey : { blockNumber: -1 });
+        let responseCount = await TransferModel.countData({$or: [{ to: req.address }, { from: req.address }, { contract: req.address }]})
+        // let arrayList = [];
+        // const [toTransactions, fromTransactions] = await Promise.all([
+        //     TransactionModel.getTransactionList(
+        //         { to: req.address },
+        //         {},
+        //         skip,
+        //         limit,
+        //         req.sortKey ? req.sortKey : { blockNumber: -1 }
+        //     ),
+        //     TransactionModel.getTransactionList(
+        //         { from: req.address },
+        //         {},
+        //         skip,
+        //         limit,
+        //         req.sortKey ? req.sortKey : { blockNumber: -1 }
+        //     )
+        // ]);
+        // let toTransactionsCount = await TransactionModel.countData({ to: req.address })
+        // let fromTransactionCount = await TransactionModel.countData({ from: req.address })
+        // let responseCount = toTransactionsCount + fromTransactionCount
+        // arrayList.push(toTransactions, fromTransactions)
+        // let newArray = [...toTransactions, ...fromTransactions]
+        // var firstKey = Object.keys(req.sortKey)[0];
+        // if (req.sortKey[firstKey] == 1) { 
+        //     newArray.sort((a, b) => {
+        //         a[firstKey] - b[firstKey]
+        //     })
+        // } else {
+        //     newArray.sort((a, b) => {
+        //         b[firstKey] - a[firstKey]
+        //     })
+        // }
+        // let responseToSend = newArray.slice(0, limit)
         return { response: responseToSend, count: responseCount }
 
     }
@@ -67,7 +69,7 @@ export default class Manger {
     }
 
     getTransferTransactionDetailsUsingHash = async (pathParameters) => {
-        Utils.lhtLog("BLManager:getTotalTransferTransactionForToken", "get total of TokenTransfer count", "", "");
+        Utils.lhtLog("Manger:getTotalTransferTransactionForToken", "get total of TokenTransfer count", "", "");
         let transactionHash = pathParameters.hash.toLowerCase();
         let response = {};
         let transferToken = await TransferModel.getToken({ hash: transactionHash });
