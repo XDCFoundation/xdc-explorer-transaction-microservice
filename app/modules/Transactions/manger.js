@@ -17,8 +17,8 @@ export default class Manger {
         const findObj = {
             "isActive": true
         };
-        Utils.lhtLog("Manger:getNetworkDetails", "get getNetworkDetails ", "", ""); // change manager log
-        return await NetworkDetailModel.getNetworkDetails(findObj); //no need to use await
+        Utils.lhtLog("Manger:getNetworkDetails", "get getNetworkDetails ", "", ""); 
+        return await NetworkDetailModel.getNetworkDetails(findObj); 
     }
     getTransactionsForAddress = async (pathParameter, queryStringParameter) => {
 
